@@ -28,6 +28,7 @@ class HostActivity : AppCompatActivity() {
             val svc = Intent(this, ScreenCaptureService::class.java).apply {
                 putExtra(ScreenCaptureService.EXTRA_CODE, result.resultCode)
                 putExtra(ScreenCaptureService.EXTRA_DATA, result.data)
+                putExtra(ScreenCaptureService.EXTRA_PIN, b.editPin.text.toString().trim())
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(svc)
             else startService(svc)
@@ -48,6 +49,9 @@ class HostActivity : AppCompatActivity() {
         mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
 
         b.txtIp.text = "내 IP: ${localIpAddress() ?: "와이파이 확인"}  (포트 ${Protocol.PORT})"
+        if (b.editPin.text.isNullOrBlank()) {
+            b.editPin.setText((1000..9999).random().toString())
+        }
 
         b.btnAccessibility.setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
@@ -58,6 +62,10 @@ class HostActivity : AppCompatActivity() {
                 if (!isAccessibilityEnabled()) {
                     b.txtStatus.text = "먼저 접근성 서비스를 켜주세요 (원격 조종 허용)."
                     startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                    return@setOnClickListener
+                }
+                if (b.editPin.text.toString().trim().isEmpty()) {
+                    b.txtStatus.text = "연결 PIN을 설정하세요."
                     return@setOnClickListener
                 }
                 projectionLauncher.launch(mpm.createScreenCaptureIntent())

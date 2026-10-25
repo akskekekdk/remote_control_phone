@@ -50,8 +50,10 @@ class ClientActivity : AppCompatActivity() {
 
         b.btnConnect.setOnClickListener {
             val ip = b.editIp.text.toString().trim()
+            val pin = b.editPin.text.toString().trim()
             if (ip.isEmpty()) { toast("B 폰의 IP를 입력하세요"); return@setOnClickListener }
-            connect(ip)
+            if (pin.isEmpty()) { toast("연결 PIN을 입력하세요"); return@setOnClickListener }
+            connect(ip, pin)
         }
 
         b.btnBack.setOnClickListener { sendKey(Protocol.KEY_BACK) }
@@ -61,7 +63,7 @@ class ClientActivity : AppCompatActivity() {
         setupTouch()
     }
 
-    private fun connect(ip: String) {
+    private fun connect(ip: String, pin: String) {
         if (connected) return
         b.txtStatus.text = "연결 중…"
         thread(name = "rc-client") {
@@ -70,8 +72,18 @@ class ClientActivity : AppCompatActivity() {
                 s.connect(InetSocketAddress(ip, Protocol.PORT), 5000)
                 s.tcpNoDelay = true
                 socket = s
-                dout = DataOutputStream(s.getOutputStream().buffered())
+                val o = DataOutputStream(s.getOutputStream().buffered())
                 val din = DataInputStream(s.getInputStream().buffered())
+
+                // 인증: PIN 전송 후 응답 확인
+                Protocol.writePacket(o, Protocol.TYPE_AUTH, pin.toByteArray())
+                val resp = Protocol.readPacket(din)
+                if (resp.type != Protocol.TYPE_AUTH_OK) {
+                    runOnUiThread { b.txtStatus.text = "PIN이 올바르지 않습니다" }
+                    return@thread
+                }
+
+                dout = o
                 connected = true
                 runOnUiThread {
                     b.txtStatus.text = "연결됨"

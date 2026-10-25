@@ -27,6 +27,20 @@
         android:layout_marginBottom="20dp" />
 
     <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="연결 PIN (A에게 알려주세요)"
+        android:textColor="#AAB2BD" />
+    <EditText
+        android:id="@+id/editPin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:textColor="#4FC3F7"
+        android:textSize="20sp"
+        android:layout_marginBottom="20dp" />
+
+    <TextView
         android:id="@+id/txtAccessibility"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

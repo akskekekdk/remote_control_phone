@@ -74,6 +74,16 @@
             android:textColorHint="#777"
             android:textColor="#FFFFFF"
             android:inputType="text"
+            android:layout_marginBottom="12dp" />
+
+        <EditText
+            android:id="@+id/editPin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="연결 PIN (B 화면에 표시됨)"
+            android:textColorHint="#777"
+            android:textColor="#4FC3F7"
+            android:inputType="number"
             android:layout_marginBottom="16dp" />
 
         <Button

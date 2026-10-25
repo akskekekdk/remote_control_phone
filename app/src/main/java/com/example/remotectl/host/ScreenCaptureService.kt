@@ -50,6 +50,8 @@ class ScreenCaptureService : Service() {
     private var encHeight = 0
     private var screenDpi = 0
 
+    private var pin: String = ""
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -67,6 +69,8 @@ class ScreenCaptureService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
+
+        pin = intent?.getStringExtra(EXTRA_PIN) ?: ""
 
         val mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         projection = mpm.getMediaProjection(resultCode, data).also {
@@ -128,7 +132,17 @@ class ScreenCaptureService : Service() {
         out = dout
 
         try {
-            // 영상 크기 먼저 알림
+            // 1) 인증 먼저: 첫 패킷은 반드시 AUTH 여야 하고 PIN 이 일치해야 함
+            val first = Protocol.readPacket(din)
+            val sentPin = String(first.payload)
+            if (first.type != Protocol.TYPE_AUTH || sentPin != pin) {
+                Protocol.writePacket(dout, Protocol.TYPE_AUTH_FAIL, ByteArray(0))
+                Log.w(TAG, "auth failed from ${socket.inetAddress.hostAddress}")
+                return
+            }
+            Protocol.writePacket(dout, Protocol.TYPE_AUTH_OK, ByteArray(0))
+
+            // 2) 영상 크기 알림
             Protocol.writePacket(dout, Protocol.TYPE_META, "$encWidth,$encHeight".toByteArray())
             startEncoder()
             // 인코더 출력 송신 루프를 별도 스레드로
@@ -296,6 +310,7 @@ class ScreenCaptureService : Service() {
         private const val NOTIF_ID = 42
         const val EXTRA_CODE = "code"
         const val EXTRA_DATA = "data"
+        const val EXTRA_PIN = "pin"
         const val ACTION_STOP = "stop"
     }
 }

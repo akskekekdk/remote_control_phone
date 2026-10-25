@@ -58,6 +58,11 @@
                 android:inputType="number" android:textColor="#4FC3F7" android:textSize="22sp" android:layout_marginBottom="12dp" />
 
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="연결 PIN (B가 정한 값)" android:textColor="#AAB2BD" />
+            <EditText android:id="@+id/editPin" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:inputType="number" android:textColor="#4FC3F7" android:textSize="20sp" android:layout_marginBottom="12dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="TURN 서버 (선택)" android:textColor="#777" />
             <EditText android:id="@+id/editTurnUrl" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:hint="turn:host:3478" android:textColorHint="#555" android:textColor="#FFFFFF" />

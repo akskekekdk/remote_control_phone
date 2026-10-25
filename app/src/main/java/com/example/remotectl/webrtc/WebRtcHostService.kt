@@ -50,6 +50,9 @@ class WebRtcHostService : Service() {
     private var encW = 0
     private var encH = 0
 
+    private var pin = ""
+    @Volatile private var authorized = false
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -63,6 +66,7 @@ class WebRtcHostService : Service() {
         val turnUrl = intent.getStringExtra(EXTRA_TURN_URL)
         val turnUser = intent.getStringExtra(EXTRA_TURN_USER)
         val turnCred = intent.getStringExtra(EXTRA_TURN_CRED)
+        pin = intent.getStringExtra(EXTRA_PIN) ?: ""
 
         computeResolution()
         initWebRtc(data, RtcConfig.iceServers(turnUrl, turnUser, turnCred))
@@ -139,8 +143,18 @@ class WebRtcHostService : Service() {
             override fun onError(message: String) { Log.w(TAG, "signaling error: $message") }
             override fun onClosed() {}
             override fun onAnswer(sdp: String) {} // host 는 offer 를 받는 쪽
+            override fun onAuthFail() {}           // host 는 PIN 을 검증하는 쪽
+
+            override fun onAuth(clientPin: String) {
+                authorized = (clientPin == pin)
+                if (!authorized) {
+                    Log.w(TAG, "auth failed: wrong PIN")
+                    signaling?.sendAuthFail()
+                }
+            }
 
             override fun onOffer(sdp: String) {
+                if (!authorized) { Log.w(TAG, "offer ignored: not authorized"); return }
                 val p = pc ?: return
                 p.setRemoteDescription(object : SdpObserverAdapter() {
                     override fun onSetSuccess() {
@@ -203,6 +217,7 @@ class WebRtcHostService : Service() {
         const val EXTRA_TURN_URL = "turn_url"
         const val EXTRA_TURN_USER = "turn_user"
         const val EXTRA_TURN_CRED = "turn_cred"
+        const val EXTRA_PIN = "pin"
         const val ACTION_STOP = "stop"
     }
 }

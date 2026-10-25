@@ -22,6 +22,11 @@ object Protocol {
     const val TYPE_VIDEO_CONFIG = 2  // H.264 SPS/PPS (csd-0)
     const val TYPE_VIDEO = 3         // H.264 프레임 (앞 8바이트: presentationTimeUs long)
 
+    // 인증 (연결 직후, 다른 모든 것보다 먼저)
+    const val TYPE_AUTH = 20         // A -> B : PIN 문자열(UTF-8)
+    const val TYPE_AUTH_OK = 21      // B -> A : 인증 성공
+    const val TYPE_AUTH_FAIL = 22    // B -> A : 인증 실패(직후 연결 종료)
+
     // A -> B
     const val TYPE_TAP = 10          // float x, float y
     const val TYPE_SWIPE = 11        // float x1,y1,x2,y2, int durationMs

@@ -35,6 +35,8 @@ class SignalingClient(
         fun onOffer(sdp: String)
         fun onAnswer(sdp: String)
         fun onCandidate(candidate: String, sdpMid: String?, sdpMLineIndex: Int)
+        fun onAuth(pin: String)   // host 쪽: client 가 보낸 PIN
+        fun onAuthFail()          // client 쪽: PIN 불일치
         fun onError(message: String)
         fun onClosed()
     }
@@ -67,6 +69,8 @@ class SignalingClient(
                             o.optString("sdpMid", null),
                             o.optInt("sdpMLineIndex", 0)
                         )
+                        "auth" -> listener.onAuth(o.optString("pin", ""))
+                        "auth-fail" -> listener.onAuthFail()
                         "error" -> listener.onError(o.optString("message", "unknown"))
                     }
                 } catch (e: Exception) {
@@ -90,6 +94,12 @@ class SignalingClient(
 
     fun sendAnswer(sdp: String) =
         send(JSONObject().put("type", "answer").put("sdp", sdp))
+
+    fun sendAuth(pin: String) =
+        send(JSONObject().put("type", "auth").put("pin", pin))
+
+    fun sendAuthFail() =
+        send(JSONObject().put("type", "auth-fail"))
 
     fun sendCandidate(candidate: String, sdpMid: String?, sdpMLineIndex: Int) =
         send(

@@ -37,6 +37,7 @@ class WebRtcClientActivity : AppCompatActivity() {
     private var dataChannel: DataChannel? = null
     private var remoteTrack: VideoTrack? = null
     @Volatile private var offerSent = false
+    private var pin = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +60,9 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.btnConnect.setOnClickListener {
             val url = b.editUrl.text.toString().trim()
             val code = b.editCode.text.toString().trim()
+            pin = b.editPin.text.toString().trim()
             if (url.isBlank() || code.isBlank()) { toast("서버 주소와 코드를 입력하세요"); return@setOnClickListener }
+            if (pin.isBlank()) { toast("연결 PIN을 입력하세요"); return@setOnClickListener }
             start(url, code)
         }
 
@@ -128,6 +131,11 @@ class WebRtcClientActivity : AppCompatActivity() {
             override fun onClosed() {}
             override fun onError(message: String) { runOnUiThread { b.txtStatus.text = "오류: $message" } }
             override fun onOffer(sdp: String) {} // client 는 offer 를 보내는 쪽
+            override fun onAuth(pin: String) {}  // client 는 PIN 을 보내는 쪽
+            override fun onAuthFail() {
+                runOnUiThread { b.txtStatus.text = "PIN이 올바르지 않습니다" }
+                try { signaling?.close() } catch (_: Exception) {}
+            }
 
             override fun onAnswer(sdp: String) {
                 pc?.setRemoteDescription(SdpObserverAdapter(),
@@ -144,6 +152,8 @@ class WebRtcClientActivity : AppCompatActivity() {
     private fun maybeCreateOffer() {
         if (offerSent) return
         offerSent = true
+        // 먼저 PIN 전송(상대가 검증), 그 다음 offer
+        signaling?.sendAuth(pin)
         val p = pc ?: return
         p.createOffer(object : SdpObserverAdapter() {
             override fun onCreateSuccess(desc: SessionDescription) {

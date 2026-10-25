@@ -32,6 +32,7 @@ class WebRtcHostActivity : AppCompatActivity() {
                 putExtra(WebRtcHostService.EXTRA_TURN_URL, b.editTurnUrl.text.toString().trim())
                 putExtra(WebRtcHostService.EXTRA_TURN_USER, b.editTurnUser.text.toString().trim())
                 putExtra(WebRtcHostService.EXTRA_TURN_CRED, b.editTurnCred.text.toString().trim())
+                putExtra(WebRtcHostService.EXTRA_PIN, b.editPin.text.toString().trim())
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(svc)
             else startService(svc)
@@ -51,6 +52,7 @@ class WebRtcHostActivity : AppCompatActivity() {
 
         b.editUrl.setText(RtcConfig.DEFAULT_SIGNALING_URL)
         b.editCode.setText(Random.nextInt(100000, 999999).toString())
+        b.editPin.setText(Random.nextInt(1000, 9999).toString())
 
         b.btnAccessibility.setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
@@ -63,8 +65,9 @@ class WebRtcHostActivity : AppCompatActivity() {
                     startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                     return@setOnClickListener
                 }
-                if (b.editCode.text.toString().isBlank() || b.editUrl.text.toString().isBlank()) {
-                    b.txtStatus.text = "방 코드와 신호 서버 주소를 입력하세요."
+                if (b.editCode.text.toString().isBlank() || b.editUrl.text.toString().isBlank()
+                    || b.editPin.text.toString().isBlank()) {
+                    b.txtStatus.text = "방 코드·신호 서버 주소·PIN을 입력하세요."
                     return@setOnClickListener
                 }
                 projectionLauncher.launch(mpm.createScreenCaptureIntent())

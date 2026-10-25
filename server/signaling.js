@@ -68,8 +68,8 @@ wss.on("connection", (ws) => {
       return;
     }
 
-    // 중계: 같은 방의 상대에게 그대로 전달
-    if (["offer", "answer", "candidate"].includes(msg.type)) {
+    // 중계: 같은 방의 상대에게 그대로 전달 (auth/auth-fail 포함)
+    if (["offer", "answer", "candidate", "auth", "auth-fail"].includes(msg.type)) {
       const r = rooms.get(ws.room);
       if (!r) return;
       const peer = ws.role === "host" ? r.client : r.host;
