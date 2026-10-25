@@ -1,6 +1,6 @@
 {
-  "versionCode": 6,
-  "versionName": "1.5",
+  "versionCode": 7,
+  "versionName": "1.6",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "B 화면을 버튼 바 위로 분리, 시스템 바 여백(인셋) 적용"
+  "notes": "A가 나갔다 와도 자동 재접속 (B가 재연결 수락). 왔다갔다 조종 가능"
 }

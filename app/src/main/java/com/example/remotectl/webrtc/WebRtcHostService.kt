@@ -88,7 +88,10 @@ class WebRtcHostService : Service() {
         Log.i(TAG, "enc=${encW}x$encH real=${realW}x$realH")
     }
 
-    private fun initWebRtc(projectionData: Intent, iceServers: List<PeerConnection.IceServer>) {
+    private var iceServers: List<PeerConnection.IceServer> = emptyList()
+
+    private fun initWebRtc(projectionData: Intent, servers: List<PeerConnection.IceServer>) {
+        iceServers = servers
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(applicationContext)
                 .createInitializationOptions()
@@ -99,7 +102,7 @@ class WebRtcHostService : Service() {
             .setVideoDecoderFactory(DefaultVideoDecoderFactory(eglBase.eglBaseContext))
             .createPeerConnectionFactory()
 
-        // 화면 캡처 → 영상 트랙
+        // 화면 캡처 → 영상 트랙 (연결과 무관하게 한 번만 생성, 계속 유지)
         capturer = ScreenCapturerAndroid(projectionData, object : MediaProjection.Callback() {
             override fun onStop() { Log.i(TAG, "projection stopped"); stopEverything(); stopSelf() }
         })
@@ -108,19 +111,26 @@ class WebRtcHostService : Service() {
         capturer!!.initialize(helper, applicationContext, videoSource!!.capturerObserver)
         capturer!!.startCapture(encW, encH, 30)
         videoTrack = factory!!.createVideoTrack("screen0", videoSource)
+    }
+
+    @Volatile private var offered = false
+
+    /** 접속(재접속)마다 새 PeerConnection 을 만든다 → A가 나갔다 다시 와도 연결됨. */
+    private fun createPeerConnection() {
+        try { pc?.close() } catch (_: Exception) {}
+        offered = false
 
         val rtcConfig = PeerConnection.RTCConfiguration(iceServers).apply {
             sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
             continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
         }
-        pc = factory!!.createPeerConnection(rtcConfig, object : PcObserver() {
+        val newPc = factory!!.createPeerConnection(rtcConfig, object : PcObserver() {
             override fun onIceCandidate(c: IceCandidate) {
                 signaling?.sendCandidate(c.sdp, c.sdpMid, c.sdpMLineIndex)
             }
-        })
-        // 화면을 송신하는 쪽이 offer 를 만든다(안정적). 영상 트랙 + 입력 데이터채널을 host가 생성.
-        pc!!.addTrack(videoTrack, listOf("stream0"))
-        val dc = pc!!.createDataChannel("input", DataChannel.Init())
+        }) ?: return
+        newPc.addTrack(videoTrack, listOf("stream0"))
+        val dc = newPc.createDataChannel("input", DataChannel.Init())
         dataChannel = dc
         dc.registerObserver(object : DataChannel.Observer {
             override fun onBufferedAmountChange(p: Long) {}
@@ -133,9 +143,8 @@ class WebRtcHostService : Service() {
                 catch (e: Exception) { Log.w(TAG, "input apply: ${e.message}") }
             }
         })
+        pc = newPc
     }
-
-    @Volatile private var offered = false
 
     private fun createAndSendOffer() {
         if (offered) return
@@ -152,7 +161,12 @@ class WebRtcHostService : Service() {
     private fun startSignaling(url: String, room: String) {
         signaling = SignalingClient(url, room, "host", object : SignalingClient.Listener {
             override fun onConnected() { Log.i(TAG, "signaling connected (host)") }
-            override fun onPeerJoined() { Log.i(TAG, "client joined") }
+            override fun onPeerJoined() {
+                // A가 (다시) 들어옴 → 새 연결 준비. 그 다음 A의 PIN 인증을 받으면 offer 전송.
+                Log.i(TAG, "client joined")
+                authorized = false
+                createPeerConnection()
+            }
             override fun onPeerLeft() { Log.i(TAG, "client left") }
             override fun onError(message: String) { Log.w(TAG, "signaling error: $message") }
             override fun onClosed() {}

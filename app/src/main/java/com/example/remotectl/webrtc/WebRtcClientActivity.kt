@@ -40,6 +40,7 @@ class WebRtcClientActivity : AppCompatActivity() {
     @Volatile private var offerSent = false
     private var pin = ""
     private val prefs by lazy { Prefs(this) }
+    private var reconnectOnResume = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,6 +80,16 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
         b.renderer.setEnableHardwareScaler(true)
 
+        // PeerConnectionFactory 는 한 번만 생성 (재접속 때 재사용)
+        PeerConnectionFactory.initialize(
+            PeerConnectionFactory.InitializationOptions.builder(applicationContext)
+                .createInitializationOptions()
+        )
+        factory = PeerConnectionFactory.builder()
+            .setVideoEncoderFactory(DefaultVideoEncoderFactory(eglBase.eglBaseContext, true, true))
+            .setVideoDecoderFactory(DefaultVideoDecoderFactory(eglBase.eglBaseContext))
+            .createPeerConnectionFactory()
+
         b.btnConnect.setOnClickListener {
             val url = b.editUrl.text.toString().trim()
             val code = b.editCode.text.toString().trim()
@@ -103,15 +114,9 @@ class WebRtcClientActivity : AppCompatActivity() {
     }
 
     private fun start(url: String, code: String) {
+        if (factory == null) return
+        offerSent = false
         b.txtStatus.text = "연결 중…"
-        PeerConnectionFactory.initialize(
-            PeerConnectionFactory.InitializationOptions.builder(applicationContext)
-                .createInitializationOptions()
-        )
-        factory = PeerConnectionFactory.builder()
-            .setVideoEncoderFactory(DefaultVideoEncoderFactory(eglBase.eglBaseContext, true, true))
-            .setVideoDecoderFactory(DefaultVideoDecoderFactory(eglBase.eglBaseContext))
-            .createPeerConnectionFactory()
 
         val ice = RtcConfig.iceServers(
             b.editTurnUrl.text.toString().trim().ifBlank { null },
@@ -232,13 +237,41 @@ class WebRtcClientActivity : AppCompatActivity() {
         } catch (e: Exception) { Log.w(TAG, "send: ${e.message}") }
     }
 
-    override fun onDestroy() {
+    /** 연결만 끊는다(팩토리/렌더러는 유지). 돌아오면 '바로 접속'으로 재연결. */
+    private fun disconnect() {
         try { remoteTrack?.removeSink(b.renderer) } catch (_: Exception) {}
+        remoteTrack = null
         try { signaling?.close() } catch (_: Exception) {}
+        signaling = null
         try { dataChannel?.dispose() } catch (_: Exception) {}
+        dataChannel = null
         try { pc?.close() } catch (_: Exception) {}
+        pc = null
+        offerSent = false
+    }
+
+    override fun onStop() {
+        // 앱을 벗어나면 연결을 정리. 조종 중이었다면 돌아왔을 때 자동 재접속.
+        reconnectOnResume = (b.overlayConnect.visibility == View.GONE)
+        disconnect()
+        b.overlayConnect.visibility = View.VISIBLE
+        b.txtStatus.text = ""
+        super.onStop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (reconnectOnResume && factory != null) {
+            reconnectOnResume = false
+            b.btnConnect.performClick() // 저장된 값으로 바로 재접속
+        }
+    }
+
+    override fun onDestroy() {
+        disconnect()
         try { b.renderer.release() } catch (_: Exception) {}
         try { factory?.dispose() } catch (_: Exception) {}
+        factory = null
         try { eglBase.release() } catch (_: Exception) {}
         super.onDestroy()
     }
