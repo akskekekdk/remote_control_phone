@@ -91,6 +91,17 @@ echo "sdk.dir=$ANDROID_HOME" > local.properties
 - 접근성 권한을 원격 제어에 사용하므로 Google Play 배포 시 심사가 까다로움 — 개인용 직접 설치 용도
 - 인터넷 모드는 실제 2대 기기 + 배포된 신호 서버(+필요시 TURN)에서 검증 필요
 
+## 앱 내 업데이트
+
+앱 실행 시, 그리고 메인 화면의 "업데이트 확인" 버튼으로 `latest.json` 을 확인해 새 버전이 있으면 APK 를 받아 설치합니다.
+
+- 확인 주소: `app/build.gradle.kts` 의 `UPDATE_URL` (GitHub raw `latest.json`)
+- 배포(새 버전 내보내기):
+  1. `versionCode`/`versionName` 올리고 release APK 빌드
+  2. `dist/app-release.apk` 교체, `latest.json` 의 `versionCode`/`versionName`/`notes` 갱신
+  3. 커밋 & 푸시 → 앱이 다음 실행/확인 때 자동 감지
+- ⚠️ 앱이 인증 없이 받으므로 **레포가 Public 이어야** 업데이트가 동작합니다. (서명 키스토어는 `.gitignore` 로 제외되어 공개되지 않음)
+
 ## 라이선스
 
 개인용. 자유롭게 수정해 사용하세요.

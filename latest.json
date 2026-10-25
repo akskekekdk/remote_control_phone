@@ -1,6 +1,6 @@
 {
   "versionCode": 2,
   "versionName": "1.1",
-  "apkUrl": "https://github.com/akskekekdk/remote_control_phone/releases/download/v1.1/app-release.apk",
+  "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
   "notes": "인터넷 모드 무료 TURN 기본 내장, 앱 내 업데이트 기능 추가"
 }
