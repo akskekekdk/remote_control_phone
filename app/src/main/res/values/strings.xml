@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">원격조종</string>
+    <string name="accessibility_desc">원격 조종을 위해 화면에 터치/제스처를 대신 입력합니다. 같은 와이파이에 연결된 조종 폰에서 보낸 입력만 전달됩니다.</string>
+</resources>
