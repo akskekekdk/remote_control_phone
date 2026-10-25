@@ -30,8 +30,9 @@ your-domain.com {
 → 앱에 입력할 주소: `wss://your-domain.com/ws`
 
 ### B. Render / Railway / Fly.io (무료 티어)
-- 이 `server` 폴더를 배포, 시작 명령 `node signaling.js`, 포트는 플랫폼의 `PORT` 환경변수 자동 사용.
-- 플랫폼이 주는 HTTPS 도메인 뒤에 `/ws` 를 붙여 입력: `wss://<앱이름>.onrender.com/ws`
+- **보안 팁:** 서비스 이름을 추측하기 어려운 무작위 값(예: `rc-a1b2c3d4`)으로 만드세요. 서비스 이름이 곧 주소(`<이름>.onrender.com`)라서, 이름이 단순하면 주소가 노출됩니다. 이 이름은 저장소에 두지 말고 본인만 알고 계세요.
+- 설정: Web Service 새로 만들기 → 이 저장소 연결 → **Root Directory `server`**, Build `npm install`, Start `node signaling.js`. 포트는 플랫폼의 `PORT` 환경변수를 자동 사용.
+- 배포 후 주소 뒤에 `/ws` 를 붙여 앱에 입력: `wss://<본인이정한무작위이름>.onrender.com/ws`
 
 ## TURN 서버 (통신사망에서 필수일 수 있음)
 

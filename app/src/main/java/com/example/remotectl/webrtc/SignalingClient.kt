@@ -98,8 +98,8 @@ class SignalingClient(
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 listener.onClosed()
-                // 4000 = 새 연결로 교체됨(의도된 종료) → 재접속하지 않음
-                if (code != 4000) scheduleReconnect()
+                // 4000 = 새 연결로 교체, 4001 = 시도 과다로 잠김 → 자동 재접속하지 않음
+                if (code != 4000 && code != 4001) scheduleReconnect()
             }
         })
     }
