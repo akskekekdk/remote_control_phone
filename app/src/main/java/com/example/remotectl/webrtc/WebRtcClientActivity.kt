@@ -61,7 +61,9 @@ class WebRtcClientActivity : AppCompatActivity() {
 
         eglBase = EglBase.create()
         b.renderer.init(eglBase.eglBaseContext, object : RendererCommon.RendererEvents {
-            override fun onFirstFrameRendered() {}
+            override fun onFirstFrameRendered() {
+                runOnUiThread { b.txtStatus.text = "영상 수신 중" }
+            }
             override fun onFrameResolutionChanged(w: Int, h: Int, rotation: Int) {
                 runOnUiThread { fitRenderer(if (rotation % 180 == 0) w else h,
                                              if (rotation % 180 == 0) h else w) }
@@ -135,52 +137,47 @@ class WebRtcClientActivity : AppCompatActivity() {
                     runOnUiThread { track.addSink(b.renderer); b.overlayConnect.visibility = View.GONE }
                 }
             }
+            // host 가 만든 입력용 데이터채널 수신 → 이 채널로 입력을 보낸다
+            override fun onDataChannel(dc: DataChannel) {
+                dataChannel = dc
+            }
         })
-
-        // 입력용 데이터 채널 + 영상 수신 트랜시버
-        dataChannel = pc!!.createDataChannel("input", DataChannel.Init())
-        pc!!.addTransceiver(
-            org.webrtc.MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
-            RtpTransceiver.RtpTransceiverInit(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY)
-        )
 
         signaling = SignalingClient(url, code, "client", object : SignalingClient.Listener {
             override fun onConnected() { runOnUiThread { b.txtStatus.text = "서버 연결됨, 상대 대기…" } }
-            override fun onPeerJoined() { maybeCreateOffer() }
+            override fun onPeerJoined() {
+                // 상대(host)가 있으면 PIN 전송 → host 가 검증 후 offer 를 보냄
+                if (!offerSent) { offerSent = true; signaling?.sendAuth(pin) }
+            }
             override fun onPeerLeft() { runOnUiThread { b.txtStatus.text = "상대가 나갔습니다" } }
             override fun onClosed() {}
             override fun onError(message: String) { runOnUiThread { b.txtStatus.text = "오류: $message" } }
-            override fun onOffer(sdp: String) {} // client 는 offer 를 보내는 쪽
             override fun onAuth(pin: String) {}  // client 는 PIN 을 보내는 쪽
             override fun onAuthFail() {
                 runOnUiThread { b.txtStatus.text = "PIN이 올바르지 않습니다" }
                 try { signaling?.close() } catch (_: Exception) {}
             }
 
-            override fun onAnswer(sdp: String) {
-                pc?.setRemoteDescription(SdpObserverAdapter(),
-                    SessionDescription(SessionDescription.Type.ANSWER, sdp))
+            // host 가 보낸 offer 를 받아 answer 생성
+            override fun onOffer(sdp: String) {
+                val p = pc ?: return
+                p.setRemoteDescription(object : SdpObserverAdapter() {
+                    override fun onSetSuccess() {
+                        p.createAnswer(object : SdpObserverAdapter() {
+                            override fun onCreateSuccess(desc: SessionDescription) {
+                                p.setLocalDescription(SdpObserverAdapter(), desc)
+                                signaling?.sendAnswer(desc.description)
+                            }
+                        }, MediaConstraints())
+                    }
+                }, SessionDescription(SessionDescription.Type.OFFER, sdp))
             }
+            override fun onAnswer(sdp: String) {} // client 는 answer 를 보내는 쪽
             override fun onCandidate(candidate: String, sdpMid: String?, sdpMLineIndex: Int) {
                 pc?.addIceCandidate(IceCandidate(sdpMid, sdpMLineIndex, candidate))
             }
         })
         signaling!!.connect()
-    }
-
-    @Synchronized
-    private fun maybeCreateOffer() {
-        if (offerSent) return
-        offerSent = true
-        // 먼저 PIN 전송(상대가 검증), 그 다음 offer
-        signaling?.sendAuth(pin)
-        val p = pc ?: return
-        p.createOffer(object : SdpObserverAdapter() {
-            override fun onCreateSuccess(desc: SessionDescription) {
-                p.setLocalDescription(SdpObserverAdapter(), desc)
-                signaling?.sendOffer(desc.description)
-            }
-        }, MediaConstraints())
     }
 
     private fun fitRenderer(vw: Int, vh: Int) {

@@ -117,22 +117,36 @@ class WebRtcHostService : Service() {
             override fun onIceCandidate(c: IceCandidate) {
                 signaling?.sendCandidate(c.sdp, c.sdpMid, c.sdpMLineIndex)
             }
-            override fun onDataChannel(dc: DataChannel) {
-                dataChannel = dc
-                dc.registerObserver(object : DataChannel.Observer {
-                    override fun onBufferedAmountChange(p: Long) {}
-                    override fun onStateChange() {}
-                    override fun onMessage(buffer: DataChannel.Buffer) {
-                        val bytes = ByteArray(buffer.data.remaining())
-                        buffer.data.get(bytes)
-                        val msg = String(bytes, StandardCharsets.UTF_8)
-                        try { InputCodec.apply(msg, realW, realH) }
-                        catch (e: Exception) { Log.w(TAG, "input apply: ${e.message}") }
-                    }
-                })
+        })
+        // 화면을 송신하는 쪽이 offer 를 만든다(안정적). 영상 트랙 + 입력 데이터채널을 host가 생성.
+        pc!!.addTrack(videoTrack, listOf("stream0"))
+        val dc = pc!!.createDataChannel("input", DataChannel.Init())
+        dataChannel = dc
+        dc.registerObserver(object : DataChannel.Observer {
+            override fun onBufferedAmountChange(p: Long) {}
+            override fun onStateChange() {}
+            override fun onMessage(buffer: DataChannel.Buffer) {
+                val bytes = ByteArray(buffer.data.remaining())
+                buffer.data.get(bytes)
+                val msg = String(bytes, StandardCharsets.UTF_8)
+                try { InputCodec.apply(msg, realW, realH) }
+                catch (e: Exception) { Log.w(TAG, "input apply: ${e.message}") }
             }
         })
-        pc!!.addTrack(videoTrack, listOf("stream0"))
+    }
+
+    @Volatile private var offered = false
+
+    private fun createAndSendOffer() {
+        if (offered) return
+        offered = true
+        val p = pc ?: return
+        p.createOffer(object : SdpObserverAdapter() {
+            override fun onCreateSuccess(desc: SessionDescription) {
+                p.setLocalDescription(SdpObserverAdapter(), desc)
+                signaling?.sendOffer(desc.description)
+            }
+        }, MediaConstraints())
     }
 
     private fun startSignaling(url: String, room: String) {
@@ -142,30 +156,23 @@ class WebRtcHostService : Service() {
             override fun onPeerLeft() { Log.i(TAG, "client left") }
             override fun onError(message: String) { Log.w(TAG, "signaling error: $message") }
             override fun onClosed() {}
-            override fun onAnswer(sdp: String) {} // host 는 offer 를 받는 쪽
-            override fun onAuthFail() {}           // host 는 PIN 을 검증하는 쪽
+            override fun onOffer(sdp: String) {}   // host 가 offer 를 만드는 쪽
+            override fun onAuthFail() {}            // host 는 PIN 을 검증하는 쪽
 
             override fun onAuth(clientPin: String) {
                 authorized = (clientPin == pin)
                 if (!authorized) {
                     Log.w(TAG, "auth failed: wrong PIN")
                     signaling?.sendAuthFail()
+                    return
                 }
+                // PIN 통과 후 offer 전송
+                createAndSendOffer()
             }
 
-            override fun onOffer(sdp: String) {
-                if (!authorized) { Log.w(TAG, "offer ignored: not authorized"); return }
-                val p = pc ?: return
-                p.setRemoteDescription(object : SdpObserverAdapter() {
-                    override fun onSetSuccess() {
-                        p.createAnswer(object : SdpObserverAdapter() {
-                            override fun onCreateSuccess(desc: SessionDescription) {
-                                p.setLocalDescription(SdpObserverAdapter(), desc)
-                                signaling?.sendAnswer(desc.description)
-                            }
-                        }, MediaConstraints())
-                    }
-                }, SessionDescription(SessionDescription.Type.OFFER, sdp))
+            override fun onAnswer(sdp: String) {
+                pc?.setRemoteDescription(SdpObserverAdapter(),
+                    SessionDescription(SessionDescription.Type.ANSWER, sdp))
             }
 
             override fun onCandidate(candidate: String, sdpMid: String?, sdpMLineIndex: Int) {

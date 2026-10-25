@@ -1,6 +1,6 @@
 {
-  "versionCode": 3,
-  "versionName": "1.2",
+  "versionCode": 4,
+  "versionName": "1.3",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "지난 연결 자동 저장 + '바로 접속' 기능 추가 (서버 주소·방 코드·PIN 기억)"
+  "notes": "인터넷 모드 영상 안 나오던 문제 수정 (화면 가진 B가 offer 생성하는 구조로 변경)"
 }
