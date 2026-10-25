@@ -1,6 +1,6 @@
 {
-  "versionCode": 8,
-  "versionName": "1.7",
+  "versionCode": 9,
+  "versionName": "1.8",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "메인 화면 '최근 연결로 바로 연결' 버튼 + 홈 화면 위젯 추가"
+  "notes": "조종 화면 하단 버튼 순서 변경: 최근앱 | 홈 | 뒤로"
 }

@@ -27,11 +27,11 @@
         android:background="#1C1F26">
 
         <Button
-            android:id="@+id/btnBack"
+            android:id="@+id/btnRecents"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="뒤로" />
+            android:text="최근앱" />
 
         <Button
             android:id="@+id/btnHome"
@@ -41,11 +41,11 @@
             android:text="홈" />
 
         <Button
-            android:id="@+id/btnRecents"
+            android:id="@+id/btnBack"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="최근앱" />
+            android:text="뒤로" />
     </LinearLayout>
 
     <!-- 연결 오버레이 -->
