@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <FrameLayout
+        android:id="@+id/rendererContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="56dp">
+
+        <org.webrtc.SurfaceViewRenderer
+            android:id="@+id/renderer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:background="#1C1F26">
+        <Button android:id="@+id/btnBack" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="뒤로" />
+        <Button android:id="@+id/btnHome" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="홈" />
+        <Button android:id="@+id/btnRecents" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="최근앱" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/overlayConnect"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#111317">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="조종하기 (A) · 인터넷"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:layout_marginBottom="16dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="신호 서버 주소 (wss://…)" android:textColor="#AAB2BD" />
+            <EditText android:id="@+id/editUrl" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:inputType="textUri" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="방 코드 (B 화면에 표시됨)" android:textColor="#AAB2BD" />
+            <EditText android:id="@+id/editCode" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:inputType="number" android:textColor="#4FC3F7" android:textSize="22sp" android:layout_marginBottom="12dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="TURN 서버 (선택)" android:textColor="#777" />
+            <EditText android:id="@+id/editTurnUrl" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:hint="turn:host:3478" android:textColorHint="#555" android:textColor="#FFFFFF" />
+            <EditText android:id="@+id/editTurnUser" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:hint="TURN 사용자" android:textColorHint="#555" android:textColor="#FFFFFF" />
+            <EditText android:id="@+id/editTurnCred" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:hint="TURN 비밀번호" android:textColorHint="#555" android:textColor="#FFFFFF" android:layout_marginBottom="16dp" />
+
+            <Button android:id="@+id/btnConnect" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="접속" />
+
+            <TextView android:id="@+id/txtStatus" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="" android:textColor="#FFCC80" android:layout_marginTop="16dp" />
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

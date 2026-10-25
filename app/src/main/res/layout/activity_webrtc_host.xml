@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#111317">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="조종 받기 (B) · 인터넷"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="방 코드 (A에게 알려주세요)"
+            android:textColor="#AAB2BD" />
+        <EditText
+            android:id="@+id/editCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:textColor="#4FC3F7"
+            android:textSize="22sp"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="신호 서버 주소 (wss://…)"
+            android:textColor="#AAB2BD" />
+        <EditText
+            android:id="@+id/editUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TURN 서버 (선택, 통신사망 연결용)"
+            android:textColor="#777"
+            android:layout_marginTop="4dp" />
+        <EditText
+            android:id="@+id/editTurnUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="turn:host:3478"
+            android:textColorHint="#555"
+            android:textColor="#FFFFFF" />
+        <EditText
+            android:id="@+id/editTurnUser"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="TURN 사용자"
+            android:textColorHint="#555"
+            android:textColor="#FFFFFF" />
+        <EditText
+            android:id="@+id/editTurnCred"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="TURN 비밀번호"
+            android:textColorHint="#555"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/txtAccessibility"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="접근성 서비스: 확인 중"
+            android:textColor="#AAB2BD"
+            android:layout_marginBottom="8dp" />
+        <Button
+            android:id="@+id/btnAccessibility"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="접근성 설정 열기"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="화면 공유 시작" />
+
+        <TextView
+            android:id="@+id/txtStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#FFCC80"
+            android:layout_marginTop="16dp" />
+    </LinearLayout>
+</ScrollView>

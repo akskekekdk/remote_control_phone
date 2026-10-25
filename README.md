@@ -1,14 +1,30 @@
 # 원격조종 (RemoteCtl)
 
-같은 와이파이에 있는 두 안드로이드 폰 사이에서, **A 폰으로 B 폰의 화면을 보며 원격으로 조종**하는 개인용 앱입니다.
+두 안드로이드 폰 사이에서, **A 폰으로 B 폰의 화면을 보며 원격으로 조종**하는 개인용 앱입니다.
 
 - **A (조종)**: B의 화면을 실시간으로 보고 탭/스와이프/길게누르기와 뒤로·홈·최근앱 버튼으로 조종
 - **B (피조종)**: 자기 화면을 공유하고, 들어온 입력을 실제 터치로 실행
 
-시그널링 서버 없이 B가 직접 TCP 서버(포트 7001)를 열고 A가 IP로 접속합니다. 같은 와이파이면 추가 서버가 필요 없습니다.
+앱 실행 시 **연결 방식**과 **역할**을 고릅니다.
+
+| 모드 | 네트워크 | 전송 | 추가 서버 |
+|---|---|---|---|
+| **같은 와이파이** | 두 폰이 같은 와이파이 | 직접 TCP(7001) + H.264 | 없음 |
+| **인터넷** | 서로 다른 망도 가능 | WebRTC(P2P) + 데이터채널 | 신호 서버(필수), TURN(권장) |
+
+### 같은 와이파이 모드
+시그널링 서버 없이 B가 직접 TCP 서버(포트 7001)를 열고 A가 B의 IP로 접속합니다.
+
+### 인터넷 모드 (WebRTC)
+방 코드로 두 폰을 짝지어 WebRTC P2P 연결을 맺습니다. 영상·입력은 폰끼리 직접 흐르고, 연결 성사만 신호 서버가 중계합니다.
+1. `server/` 의 신호 서버를 공개 주소(wss)에 올립니다 — [server/README.md](server/README.md)
+2. B: "인터넷" + "조종 받기" → 접근성 켜기 → 신호 서버 주소 입력 → 화면 공유 시작 → **방 코드** 확인
+3. A: "인터넷" + "조종하기" → 같은 서버 주소 + 방 코드 입력 → 접속
+4. 통신사망(LTE/5G) 등에서 연결이 안 되면 TURN 서버 자격증명을 입력 (server/README.md 참고)
 
 ## 구조
 
+같은 와이파이 모드:
 ```
 [B 폰 (피조종)]                                  [A 폰 (조종)]
 MediaProjection ── 화면 캡처                      SurfaceView ◀── 표시
@@ -17,8 +33,28 @@ AccessibilityService ◀── 입력(정규화 좌표) ────────
   → dispatchGesture 로 실제 터치 주입
 ```
 
+인터넷 모드:
+```
+[B 폰]                         [신호 서버]                      [A 폰]
+WebRTC 영상 트랙 송신   ◀── offer/answer/candidate 중계 ──▶   SurfaceViewRenderer
+AccessibilityService  ◀═══ WebRTC 데이터채널(입력) P2P ═══▶   터치/스와이프/키
+          └════════════ 영상·입력은 P2P 직접 전송 ════════════┘
+```
+
 - 좌표는 0.0~1.0 로 정규화해 전송 → 양쪽 해상도가 달라도 정확히 매핑
 - 영상 긴 변을 1280px 로 축소, H.264 ~6Mbps
+
+### 소스 구조
+```
+app/src/main/java/com/example/remotectl/
+  MainActivity.kt            모드·역할 선택
+  Protocol.kt                와이파이 모드 TCP 프레이밍
+  host/   ScreenCaptureService, ControlAccessibilityService, HostActivity   (와이파이 B)
+  client/ ClientActivity, VideoDecoder                                       (와이파이 A)
+  webrtc/ SignalingClient, RtcConfig, InputCodec, Adapters,
+          WebRtcHostService/Activity, WebRtcClientActivity                   (인터넷)
+server/   signaling.js  신호 서버(Node.js/ws)
+```
 
 ## 빌드
 

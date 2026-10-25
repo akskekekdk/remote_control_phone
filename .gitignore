@@ -15,3 +15,6 @@ captures/
 release.keystore
 keystore.properties
 .kotlin/
+
+# Node (신호 서버)
+server/node_modules/

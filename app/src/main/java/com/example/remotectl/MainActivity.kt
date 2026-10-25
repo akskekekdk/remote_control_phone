@@ -6,8 +6,10 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.remotectl.client.ClientActivity
 import com.example.remotectl.databinding.ActivityMainBinding
 import com.example.remotectl.host.HostActivity
+import com.example.remotectl.webrtc.WebRtcClientActivity
+import com.example.remotectl.webrtc.WebRtcHostActivity
 
-/** 실행 시 역할(조종 / 피조종)을 고른다. */
+/** 실행 시 연결 모드(와이파이 / 인터넷)와 역할(조종 / 피조종)을 고른다. */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityMainBinding
@@ -18,12 +20,14 @@ class MainActivity : AppCompatActivity() {
         setContentView(b.root)
 
         b.btnController.setOnClickListener {
-            // A 폰: 다른 폰을 본다/조종한다
-            startActivity(Intent(this, ClientActivity::class.java))
+            val internet = b.radioInternet.isChecked
+            startActivity(Intent(this,
+                if (internet) WebRtcClientActivity::class.java else ClientActivity::class.java))
         }
         b.btnControlled.setOnClickListener {
-            // B 폰: 내 화면을 공유하고 조종을 허용한다
-            startActivity(Intent(this, HostActivity::class.java))
+            val internet = b.radioInternet.isChecked
+            startActivity(Intent(this,
+                if (internet) WebRtcHostActivity::class.java else HostActivity::class.java))
         }
     }
 }

@@ -19,9 +19,33 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="이 폰의 역할을 선택하세요 (같은 와이파이)"
+        android:text="연결 방식과 역할을 선택하세요"
         android:textColor="#AAB2BD"
-        android:layout_marginBottom="40dp" />
+        android:layout_marginBottom="24dp" />
+
+    <RadioGroup
+        android:id="@+id/radioMode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="28dp">
+        <RadioButton
+            android:id="@+id/radioWifi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="같은 와이파이"
+            android:textColor="#FFFFFF"
+            android:checked="true"
+            android:buttonTint="#4FC3F7"
+            android:layout_marginEnd="20dp" />
+        <RadioButton
+            android:id="@+id/radioInternet"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="인터넷"
+            android:textColor="#FFFFFF"
+            android:buttonTint="#4FC3F7" />
+    </RadioGroup>
 
     <Button
         android:id="@+id/btnController"
