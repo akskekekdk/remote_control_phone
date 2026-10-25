@@ -39,6 +39,7 @@ function send(ws, obj) {
 wss.on("connection", (ws) => {
   ws.room = null;
   ws.role = null;
+  ws.isAlive = true;
 
   ws.on("message", (raw) => {
     let msg;
@@ -51,9 +52,9 @@ wss.on("connection", (ws) => {
 
       let r = rooms.get(room);
       if (!r) { r = {}; rooms.set(room, r); }
-      if (r[role] && r[role].readyState === r[role].OPEN) {
-        send(ws, { type: "error", message: `이미 ${role} 가 접속해 있습니다` });
-        return;
+      // 같은 역할이 이미 있으면 '최신 연결 우선' — 옛 연결(유령 포함)을 끊고 교체
+      if (r[role] && r[role] !== ws) {
+        try { r[role].close(4000, "replaced by new connection"); } catch {}
       }
       r[role] = ws;
       ws.room = room;
@@ -77,15 +78,31 @@ wss.on("connection", (ws) => {
     }
   });
 
+  ws.on("pong", () => { ws.isAlive = true; });
+
   ws.on("close", () => {
     const r = rooms.get(ws.room);
     if (!r) return;
-    if (r[ws.role] === ws) delete r[ws.role];
+    // 이미 다른(새) 연결로 교체된 소켓이면 여기서 아무것도 하지 않음
+    if (r[ws.role] !== ws) return;
+    delete r[ws.role];
     const peer = ws.role === "host" ? r.client : r.host;
     send(peer, { type: "peer-left" });
     if (!r.host && !r.client) rooms.delete(ws.room);
     console.log(`leave room=${ws.room} role=${ws.role}`);
   });
 });
+
+// heartbeat: 30초마다 ping, 응답 없는(죽은) 소켓은 종료 → 유령 연결 정리
+const HEARTBEAT_MS = 30000;
+const heartbeat = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (ws.isAlive === false) { try { ws.terminate(); } catch {} return; }
+    ws.isAlive = false;
+    try { ws.ping(); } catch {}
+  });
+}, HEARTBEAT_MS);
+
+wss.on("close", () => clearInterval(heartbeat));
 
 server.listen(PORT, () => console.log(`signaling listening on :${PORT} (path /ws)`));
