@@ -10,3 +10,8 @@ local.properties
 captures/
 .externalNativeBuild/
 .cxx/
+
+# 릴리스 서명 (깃에 올리지 않음 — 별도 보관)
+release.keystore
+keystore.properties
+.kotlin/

@@ -1,0 +1,33 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 큰 폰 (B: 화면) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,30 h26 a4,4 0 0 1 4,4 v40 a4,4 0 0 1 -4,4 h-26 a4,4 0 0 1 -4,-4 v-40 a4,4 0 0 1 4,-4 z" />
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M45,37 h24 v30 h-24 z" />
+    <!-- 작은 폰 (A: 조종) 겹침 -->
+    <path
+        android:fillColor="#90CAF9"
+        android:pathData="M60,52 h18 a3,3 0 0 1 3,3 v26 a3,3 0 0 1 -3,3 h-18 a3,3 0 0 1 -3,-3 v-26 a3,3 0 0 1 3,-3 z" />
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M61,57 h16 v19 h-16 z" />
+    <!-- 신호 호 -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M30,44 a14,14 0 0 0 0,20" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M24,38 a22,22 0 0 0 0,32" />
+</vector>
