@@ -60,4 +60,33 @@
         android:layout_height="wrap_content"
         android:text="조종 받기 (B: 내 화면 공유)" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#2A2E37"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/txtVersion"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="v1.1"
+            android:textColor="#777" />
+
+        <Button
+            android:id="@+id/btnUpdate"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="업데이트 확인" />
+    </LinearLayout>
+
 </LinearLayout>

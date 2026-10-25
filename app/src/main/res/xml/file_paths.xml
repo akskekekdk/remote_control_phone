@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 다운로드한 업데이트 APK (앱 전용 외부 저장소) -->
+    <external-files-path name="downloads" path="." />
+    <external-cache-path name="cache" path="." />
+</paths>

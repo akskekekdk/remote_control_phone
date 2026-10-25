@@ -1,0 +1,14 @@
+# Render.com 원클릭 배포 블루프린트.
+# 1) github.com/akskekekdk/remote_control_phone 를 Render에 연결
+# 2) "New +" → "Blueprint" → 이 저장소 선택 → 자동으로 아래 설정대로 생성
+# 3) 배포 후 나오는 주소 뒤에 /ws 를 붙여 앱에 입력 (예: wss://remotectl-signaling.onrender.com/ws)
+services:
+  - type: web
+    name: remotectl-signaling
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install
+    startCommand: node signaling.js
+    healthCheckPath: /health
+    autoDeploy: true
