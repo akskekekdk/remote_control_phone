@@ -47,7 +47,19 @@ class SignalingClient(
         .retryOnConnectionFailure(true)
         .build()
 
+    @Volatile private var active = true
+    private val scheduler = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
+
+    /** 연결이 끊기면 자동으로 다시 붙는다 (서버가 잠들었다 깨어나도 방으로 복귀). */
+    private fun scheduleReconnect() {
+        if (!active) return
+        try {
+            scheduler.schedule({ if (active) connect() }, 3, TimeUnit.SECONDS)
+        } catch (_: Exception) {}
+    }
+
     fun connect() {
+        if (!active) return
         val req = Request.Builder().url(url).build()
         ws = http.newWebSocket(req, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -81,10 +93,13 @@ class SignalingClient(
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.w(TAG, "ws fail: ${t.message}")
                 listener.onError(t.message ?: "연결 실패")
+                scheduleReconnect()
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 listener.onClosed()
+                // 4000 = 새 연결로 교체됨(의도된 종료) → 재접속하지 않음
+                if (code != 4000) scheduleReconnect()
             }
         })
     }
@@ -114,6 +129,8 @@ class SignalingClient(
     }
 
     fun close() {
+        active = false
+        try { scheduler.shutdownNow() } catch (_: Exception) {}
         try { ws?.close(1000, "bye") } catch (_: Exception) {}
         ws = null
     }

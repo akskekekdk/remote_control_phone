@@ -1,6 +1,6 @@
 {
-  "versionCode": 9,
-  "versionName": "1.8",
+  "versionCode": 10,
+  "versionName": "1.9",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "조종 화면 하단 버튼 순서 변경: 최근앱 | 홈 | 뒤로"
+  "notes": "신호 연결 자동 재접속 (서버가 잠들었다 깨어나도 B가 방으로 복귀). '상대 대기' 멈춤 해결"
 }

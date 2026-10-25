@@ -168,7 +168,10 @@ class WebRtcClientActivity : AppCompatActivity() {
                 // 상대(host)가 있으면 PIN 전송 → host 가 검증 후 offer 를 보냄
                 if (!offerSent) { offerSent = true; signaling?.sendAuth(pin) }
             }
-            override fun onPeerLeft() { runOnUiThread { b.txtStatus.text = "상대가 나갔습니다" } }
+            override fun onPeerLeft() {
+                offerSent = false // 상대(B)가 돌아오면 다시 인증하도록
+                runOnUiThread { b.txtStatus.text = "상대 대기…" }
+            }
             override fun onClosed() {}
             override fun onError(message: String) { runOnUiThread { b.txtStatus.text = "오류: $message" } }
             override fun onAuth(pin: String) {}  // client 는 PIN 을 보내는 쪽
