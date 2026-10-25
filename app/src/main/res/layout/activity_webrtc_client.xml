@@ -71,6 +71,9 @@
             <EditText android:id="@+id/editTurnCred" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:hint="TURN 비밀번호" android:textColorHint="#555" android:textColor="#FFFFFF" android:layout_marginBottom="16dp" />
 
+            <Button android:id="@+id/btnQuick" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="지난 연결로 바로 접속" android:visibility="gone" android:layout_marginBottom="8dp" />
+
             <Button android:id="@+id/btnConnect" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="접속" />
 
             <TextView android:id="@+id/txtStatus" android:layout_width="wrap_content" android:layout_height="wrap_content"

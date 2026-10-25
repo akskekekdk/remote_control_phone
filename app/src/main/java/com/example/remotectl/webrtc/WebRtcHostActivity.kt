@@ -9,6 +9,7 @@ import android.provider.Settings
 import android.text.TextUtils
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.example.remotectl.Prefs
 import com.example.remotectl.databinding.ActivityWebrtcHostBinding
 import com.example.remotectl.host.ControlAccessibilityService
 import kotlin.random.Random
@@ -19,6 +20,7 @@ class WebRtcHostActivity : AppCompatActivity() {
     private lateinit var b: ActivityWebrtcHostBinding
     private lateinit var mpm: MediaProjectionManager
     private var sharing = false
+    private val prefs by lazy { Prefs(this) }
 
     private val projectionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -50,9 +52,13 @@ class WebRtcHostActivity : AppCompatActivity() {
         setContentView(b.root)
         mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
 
-        b.editUrl.setText(RtcConfig.DEFAULT_SIGNALING_URL)
-        b.editCode.setText(Random.nextInt(100000, 999999).toString())
-        b.editPin.setText(Random.nextInt(1000, 9999).toString())
+        // 지난 값 재사용 (A의 저장된 코드/PIN이 계속 맞도록). 처음이면 랜덤 생성.
+        b.editUrl.setText(prefs.get(Prefs.NET_URL, RtcConfig.DEFAULT_SIGNALING_URL))
+        b.editCode.setText(prefs.get(Prefs.NET_CODE, Random.nextInt(100000, 999999).toString()))
+        b.editPin.setText(prefs.get(Prefs.NET_PIN, Random.nextInt(1000, 9999).toString()))
+        b.editTurnUrl.setText(prefs.get(Prefs.NET_TURN_URL))
+        b.editTurnUser.setText(prefs.get(Prefs.NET_TURN_USER))
+        b.editTurnCred.setText(prefs.get(Prefs.NET_TURN_CRED))
 
         b.btnAccessibility.setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
@@ -70,6 +76,13 @@ class WebRtcHostActivity : AppCompatActivity() {
                     b.txtStatus.text = "방 코드·신호 서버 주소·PIN을 입력하세요."
                     return@setOnClickListener
                 }
+                // 다음에도 같은 코드/PIN 쓰도록 저장
+                prefs.put(Prefs.NET_URL, b.editUrl.text.toString().trim())
+                prefs.put(Prefs.NET_CODE, b.editCode.text.toString().trim())
+                prefs.put(Prefs.NET_PIN, b.editPin.text.toString().trim())
+                prefs.put(Prefs.NET_TURN_URL, b.editTurnUrl.text.toString().trim())
+                prefs.put(Prefs.NET_TURN_USER, b.editTurnUser.text.toString().trim())
+                prefs.put(Prefs.NET_TURN_CRED, b.editTurnCred.text.toString().trim())
                 projectionLauncher.launch(mpm.createScreenCaptureIntent())
             } else {
                 stopService(Intent(this, WebRtcHostService::class.java).apply {

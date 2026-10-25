@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.text.TextUtils
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.example.remotectl.Prefs
 import com.example.remotectl.Protocol
 import com.example.remotectl.databinding.ActivityHostBinding
 import java.net.Inet4Address
@@ -20,6 +21,7 @@ class HostActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityHostBinding
     private lateinit var mpm: MediaProjectionManager
+    private val prefs by lazy { Prefs(this) }
 
     private val projectionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -49,9 +51,7 @@ class HostActivity : AppCompatActivity() {
         mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
 
         b.txtIp.text = "내 IP: ${localIpAddress() ?: "와이파이 확인"}  (포트 ${Protocol.PORT})"
-        if (b.editPin.text.isNullOrBlank()) {
-            b.editPin.setText((1000..9999).random().toString())
-        }
+        b.editPin.setText(prefs.get(Prefs.WIFI_PIN, (1000..9999).random().toString()))
 
         b.btnAccessibility.setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
@@ -68,6 +68,7 @@ class HostActivity : AppCompatActivity() {
                     b.txtStatus.text = "연결 PIN을 설정하세요."
                     return@setOnClickListener
                 }
+                prefs.put(Prefs.WIFI_PIN, b.editPin.text.toString().trim())
                 projectionLauncher.launch(mpm.createScreenCaptureIntent())
             } else {
                 stopService(Intent(this, ScreenCaptureService::class.java).apply {

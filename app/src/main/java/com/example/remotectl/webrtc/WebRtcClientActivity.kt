@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.example.remotectl.Prefs
 import com.example.remotectl.databinding.ActivityWebrtcClientBinding
 import org.webrtc.DataChannel
 import org.webrtc.DefaultVideoDecoderFactory
@@ -38,13 +39,25 @@ class WebRtcClientActivity : AppCompatActivity() {
     private var remoteTrack: VideoTrack? = null
     @Volatile private var offerSent = false
     private var pin = ""
+    private val prefs by lazy { Prefs(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivityWebrtcClientBinding.inflate(layoutInflater)
         setContentView(b.root)
 
-        b.editUrl.setText(RtcConfig.DEFAULT_SIGNALING_URL)
+        // 지난 연결값 자동 채움 (즐겨찾기)
+        b.editUrl.setText(prefs.get(Prefs.NET_URL, RtcConfig.DEFAULT_SIGNALING_URL))
+        b.editCode.setText(prefs.get(Prefs.NET_CODE))
+        b.editPin.setText(prefs.get(Prefs.NET_PIN))
+        b.editTurnUrl.setText(prefs.get(Prefs.NET_TURN_URL))
+        b.editTurnUser.setText(prefs.get(Prefs.NET_TURN_USER))
+        b.editTurnCred.setText(prefs.get(Prefs.NET_TURN_CRED))
+
+        val hasSaved = prefs.has(Prefs.NET_URL) && prefs.has(Prefs.NET_CODE) && prefs.has(Prefs.NET_PIN)
+        b.btnQuick.visibility = if (hasSaved) View.VISIBLE else View.GONE
+        b.btnQuick.text = "지난 연결로 바로 접속 (코드 ${prefs.get(Prefs.NET_CODE)})"
+        b.btnQuick.setOnClickListener { b.btnConnect.performClick() }
 
         eglBase = EglBase.create()
         b.renderer.init(eglBase.eglBaseContext, object : RendererCommon.RendererEvents {
@@ -63,6 +76,13 @@ class WebRtcClientActivity : AppCompatActivity() {
             pin = b.editPin.text.toString().trim()
             if (url.isBlank() || code.isBlank()) { toast("서버 주소와 코드를 입력하세요"); return@setOnClickListener }
             if (pin.isBlank()) { toast("연결 PIN을 입력하세요"); return@setOnClickListener }
+            // 다음에 바로 쓰도록 저장
+            prefs.put(Prefs.NET_URL, url)
+            prefs.put(Prefs.NET_CODE, code)
+            prefs.put(Prefs.NET_PIN, pin)
+            prefs.put(Prefs.NET_TURN_URL, b.editTurnUrl.text.toString().trim())
+            prefs.put(Prefs.NET_TURN_USER, b.editTurnUser.text.toString().trim())
+            prefs.put(Prefs.NET_TURN_CRED, b.editTurnCred.text.toString().trim())
             start(url, code)
         }
 

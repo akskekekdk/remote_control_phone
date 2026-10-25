@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.example.remotectl.Protocol
+import com.example.remotectl.Prefs
 import com.example.remotectl.databinding.ActivityClientBinding
 import java.io.DataInputStream
 import java.io.DataOutputStream
@@ -33,11 +34,20 @@ class ClientActivity : AppCompatActivity() {
 
     private var videoW = 0
     private var videoH = 0
+    private val prefs by lazy { Prefs(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivityClientBinding.inflate(layoutInflater)
         setContentView(b.root)
+
+        // 지난 연결값 자동 채움
+        b.editIp.setText(prefs.get(Prefs.WIFI_IP))
+        b.editPin.setText(prefs.get(Prefs.WIFI_PIN))
+        val hasSaved = prefs.has(Prefs.WIFI_IP) && prefs.has(Prefs.WIFI_PIN)
+        b.btnQuick.visibility = if (hasSaved) android.view.View.VISIBLE else android.view.View.GONE
+        b.btnQuick.text = "지난 연결로 바로 접속 (${prefs.get(Prefs.WIFI_IP)})"
+        b.btnQuick.setOnClickListener { b.btnConnect.performClick() }
 
         b.surface.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
@@ -53,6 +63,8 @@ class ClientActivity : AppCompatActivity() {
             val pin = b.editPin.text.toString().trim()
             if (ip.isEmpty()) { toast("B 폰의 IP를 입력하세요"); return@setOnClickListener }
             if (pin.isEmpty()) { toast("연결 PIN을 입력하세요"); return@setOnClickListener }
+            prefs.put(Prefs.WIFI_IP, ip)
+            prefs.put(Prefs.WIFI_PIN, pin)
             connect(ip, pin)
         }
 
