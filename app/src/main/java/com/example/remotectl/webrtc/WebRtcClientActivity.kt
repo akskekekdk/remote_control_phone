@@ -97,12 +97,14 @@ class WebRtcClientActivity : AppCompatActivity() {
             if (url.isBlank() || code.isBlank()) { toast("서버 주소와 코드를 입력하세요"); return@setOnClickListener }
             if (pin.isBlank()) { toast("연결 PIN을 입력하세요"); return@setOnClickListener }
             // 다음에 바로 쓰도록 저장
+            prefs.put(Prefs.LAST_MODE, "internet")
             prefs.put(Prefs.NET_URL, url)
             prefs.put(Prefs.NET_CODE, code)
             prefs.put(Prefs.NET_PIN, pin)
             prefs.put(Prefs.NET_TURN_URL, b.editTurnUrl.text.toString().trim())
             prefs.put(Prefs.NET_TURN_USER, b.editTurnUser.text.toString().trim())
             prefs.put(Prefs.NET_TURN_CRED, b.editTurnCred.text.toString().trim())
+            com.example.remotectl.widget.RemoteWidgetProvider.updateAll(this)
             start(url, code)
         }
 
@@ -111,6 +113,11 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.btnRecents.setOnClickListener { sendInput(InputCodec.key(2)) }
 
         setupTouch()
+
+        // 바로 연결(메인 버튼/위젯에서 진입) — 저장값이 있으면 즉시 접속
+        if (intent?.getBooleanExtra(EXTRA_AUTOCONNECT, false) == true && hasSaved) {
+            b.root.post { b.btnConnect.performClick() }
+        }
     }
 
     private fun start(url: String, code: String) {
@@ -279,5 +286,8 @@ class WebRtcClientActivity : AppCompatActivity() {
     private fun toast(m: String) =
         android.widget.Toast.makeText(this, m, android.widget.Toast.LENGTH_SHORT).show()
 
-    companion object { private const val TAG = "WebRtcClient" }
+    companion object {
+        private const val TAG = "WebRtcClient"
+        const val EXTRA_AUTOCONNECT = "autoconnect"
+    }
 }

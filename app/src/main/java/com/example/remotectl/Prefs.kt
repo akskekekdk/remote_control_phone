@@ -11,6 +11,8 @@ class Prefs(context: Context) {
     fun has(key: String): Boolean = !sp.getString(key, null).isNullOrBlank()
 
     companion object {
+        // 마지막으로 조종(A)한 연결 방식: "wifi" | "internet"
+        const val LAST_MODE = "last_mode"
         // 와이파이 모드
         const val WIFI_IP = "wifi_ip"
         const val WIFI_PIN = "wifi_pin"

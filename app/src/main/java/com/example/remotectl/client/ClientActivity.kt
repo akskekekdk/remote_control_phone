@@ -63,8 +63,10 @@ class ClientActivity : AppCompatActivity() {
             val pin = b.editPin.text.toString().trim()
             if (ip.isEmpty()) { toast("B 폰의 IP를 입력하세요"); return@setOnClickListener }
             if (pin.isEmpty()) { toast("연결 PIN을 입력하세요"); return@setOnClickListener }
+            prefs.put(Prefs.LAST_MODE, "wifi")
             prefs.put(Prefs.WIFI_IP, ip)
             prefs.put(Prefs.WIFI_PIN, pin)
+            com.example.remotectl.widget.RemoteWidgetProvider.updateAll(this)
             connect(ip, pin)
         }
 
@@ -73,6 +75,10 @@ class ClientActivity : AppCompatActivity() {
         b.btnRecents.setOnClickListener { sendKey(Protocol.KEY_RECENTS) }
 
         setupTouch()
+
+        if (intent?.getBooleanExtra(EXTRA_AUTOCONNECT, false) == true && hasSaved) {
+            b.root.post { b.btnConnect.performClick() }
+        }
     }
 
     private fun connect(ip: String, pin: String) {
@@ -224,5 +230,8 @@ class ClientActivity : AppCompatActivity() {
     private fun toast(m: String) =
         android.widget.Toast.makeText(this, m, android.widget.Toast.LENGTH_SHORT).show()
 
-    companion object { private const val TAG = "RcClient" }
+    companion object {
+        private const val TAG = "RcClient"
+        const val EXTRA_AUTOCONNECT = "autoconnect"
+    }
 }

@@ -1,7 +1,8 @@
 package com.example.remotectl
 
-import android.os.Bundle
 import android.content.Intent
+import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.remotectl.client.ClientActivity
@@ -15,6 +16,7 @@ import com.example.remotectl.webrtc.WebRtcHostActivity
 class MainActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityMainBinding
+    private val prefs by lazy { Prefs(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,10 +36,53 @@ class MainActivity : AppCompatActivity() {
                 if (internet) WebRtcHostActivity::class.java else HostActivity::class.java))
         }
 
+        b.btnQuickConnect.setOnClickListener { quickConnect() }
         b.btnUpdate.setOnClickListener { checkUpdate(manual = true) }
 
-        // 실행 시 조용히 한 번 확인
+        // 위젯에서 진입하면 바로 연결
+        if (intent?.getBooleanExtra(EXTRA_QUICK, false) == true) quickConnect()
+
         checkUpdate(manual = false)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshQuickButton()
+    }
+
+    private fun refreshQuickButton() {
+        val info = lastConnectionLabel()
+        if (info == null) {
+            b.btnQuickConnect.visibility = View.GONE
+        } else {
+            b.btnQuickConnect.visibility = View.VISIBLE
+            b.btnQuickConnect.text = "⚡ 최근 연결로 바로 연결\n$info"
+        }
+    }
+
+    /** 최근 연결이 있으면 "모드 · 코드/IP" 라벨, 없으면 null */
+    private fun lastConnectionLabel(): String? {
+        return when (prefs.get(Prefs.LAST_MODE)) {
+            "internet" ->
+                if (prefs.has(Prefs.NET_CODE) && prefs.has(Prefs.NET_PIN))
+                    "인터넷 · 코드 ${prefs.get(Prefs.NET_CODE)}" else null
+            "wifi" ->
+                if (prefs.has(Prefs.WIFI_IP) && prefs.has(Prefs.WIFI_PIN))
+                    "와이파이 · ${prefs.get(Prefs.WIFI_IP)}" else null
+            else -> null
+        }
+    }
+
+    private fun quickConnect() {
+        val mode = prefs.get(Prefs.LAST_MODE)
+        val target = when (mode) {
+            "internet" -> WebRtcClientActivity::class.java
+            "wifi" -> ClientActivity::class.java
+            else -> { return }
+        }
+        val extraKey = if (mode == "internet")
+            WebRtcClientActivity.EXTRA_AUTOCONNECT else ClientActivity.EXTRA_AUTOCONNECT
+        startActivity(Intent(this, target).putExtra(extraKey, true))
     }
 
     private fun checkUpdate(manual: Boolean) {
@@ -46,11 +91,8 @@ class MainActivity : AppCompatActivity() {
             onResult = { info ->
                 runOnUiThread {
                     b.txtVersion.text = "v${BuildConfig.VERSION_NAME}"
-                    if (info == null) {
-                        if (manual) toast("최신 버전입니다")
-                    } else {
-                        showUpdateDialog(info)
-                    }
+                    if (info == null) { if (manual) toast("최신 버전입니다") }
+                    else showUpdateDialog(info)
                 }
             },
             onError = { msg ->
@@ -75,4 +117,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun toast(m: String) =
         android.widget.Toast.makeText(this, m, android.widget.Toast.LENGTH_SHORT).show()
+
+    companion object {
+        const val EXTRA_QUICK = "quick"
+    }
 }

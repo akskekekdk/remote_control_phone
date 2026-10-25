@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/widget_bg"
+    android:padding="12dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⚡ 원격 바로 연결"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/widgetSub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="설정 필요"
+        android:textColor="#BBDEFB"
+        android:textSize="12sp"
+        android:layout_marginTop="2dp" />
+</LinearLayout>

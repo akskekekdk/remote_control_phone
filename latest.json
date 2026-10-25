@@ -1,6 +1,6 @@
 {
-  "versionCode": 7,
-  "versionName": "1.6",
+  "versionCode": 8,
+  "versionName": "1.7",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "A가 나갔다 와도 자동 재접속 (B가 재연결 수락). 왔다갔다 조종 가능"
+  "notes": "메인 화면 '최근 연결로 바로 연결' 버튼 + 홈 화면 위젯 추가"
 }

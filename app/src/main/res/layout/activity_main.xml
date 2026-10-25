@@ -60,6 +60,18 @@
         android:layout_height="wrap_content"
         android:text="조종 받기 (B: 내 화면 공유)" />
 
+    <Button
+        android:id="@+id/btnQuickConnect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:paddingVertical="14dp"
+        android:text="⚡ 최근 연결로 바로 연결"
+        android:textStyle="bold"
+        android:visibility="gone"
+        android:backgroundTint="#4FC3F7"
+        android:textColor="#0B0D10" />
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
