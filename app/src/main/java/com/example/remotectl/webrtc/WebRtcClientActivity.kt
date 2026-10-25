@@ -46,6 +46,13 @@ class WebRtcClientActivity : AppCompatActivity() {
         b = ActivityWebrtcClientBinding.inflate(layoutInflater)
         setContentView(b.root)
 
+        // 시스템 바(상태바/네비게이션바)만큼 여백 → 영상은 상태바 아래, 버튼은 네비바 위
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(b.contentRoot) { v, insets ->
+            val bars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
+
         // 지난 연결값 자동 채움 (즐겨찾기)
         b.editUrl.setText(prefs.get(Prefs.NET_URL, RtcConfig.DEFAULT_SIGNALING_URL))
         b.editCode.setText(prefs.get(Prefs.NET_CODE))

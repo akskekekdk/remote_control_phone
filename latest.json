@@ -1,6 +1,6 @@
 {
-  "versionCode": 5,
-  "versionName": "1.4",
+  "versionCode": 6,
+  "versionName": "1.5",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "까만 화면 수정 (영상 표시 영역 높이가 0이던 레이아웃 버그)"
+  "notes": "B 화면을 버튼 바 위로 분리, 시스템 바 여백(인셋) 적용"
 }
