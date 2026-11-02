@@ -23,5 +23,8 @@ class Prefs(context: Context) {
         const val NET_TURN_URL = "net_turn_url"
         const val NET_TURN_USER = "net_turn_user"
         const val NET_TURN_CRED = "net_turn_cred"
+        // Cloudflare TURN (자동 자격증명 발급)
+        const val CF_KEY_ID = "cf_key_id"
+        const val CF_TOKEN = "cf_token"
     }
 }

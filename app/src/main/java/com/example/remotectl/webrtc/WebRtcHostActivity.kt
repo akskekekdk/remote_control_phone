@@ -34,6 +34,8 @@ class WebRtcHostActivity : AppCompatActivity() {
                 putExtra(WebRtcHostService.EXTRA_TURN_URL, b.editTurnUrl.text.toString().trim())
                 putExtra(WebRtcHostService.EXTRA_TURN_USER, b.editTurnUser.text.toString().trim())
                 putExtra(WebRtcHostService.EXTRA_TURN_CRED, b.editTurnCred.text.toString().trim())
+                putExtra(WebRtcHostService.EXTRA_CF_KEY, b.editCfKey.text.toString().trim())
+                putExtra(WebRtcHostService.EXTRA_CF_TOKEN, b.editCfToken.text.toString().trim())
                 putExtra(WebRtcHostService.EXTRA_PIN, b.editPin.text.toString().trim())
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(svc)
@@ -59,6 +61,8 @@ class WebRtcHostActivity : AppCompatActivity() {
         b.editTurnUrl.setText(prefs.get(Prefs.NET_TURN_URL))
         b.editTurnUser.setText(prefs.get(Prefs.NET_TURN_USER))
         b.editTurnCred.setText(prefs.get(Prefs.NET_TURN_CRED))
+        b.editCfKey.setText(prefs.get(Prefs.CF_KEY_ID))
+        b.editCfToken.setText(prefs.get(Prefs.CF_TOKEN))
 
         b.btnAccessibility.setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
@@ -83,6 +87,8 @@ class WebRtcHostActivity : AppCompatActivity() {
                 prefs.put(Prefs.NET_TURN_URL, b.editTurnUrl.text.toString().trim())
                 prefs.put(Prefs.NET_TURN_USER, b.editTurnUser.text.toString().trim())
                 prefs.put(Prefs.NET_TURN_CRED, b.editTurnCred.text.toString().trim())
+                prefs.put(Prefs.CF_KEY_ID, b.editCfKey.text.toString().trim())
+                prefs.put(Prefs.CF_TOKEN, b.editCfToken.text.toString().trim())
                 projectionLauncher.launch(mpm.createScreenCaptureIntent())
             } else {
                 stopService(Intent(this, WebRtcHostService::class.java).apply {

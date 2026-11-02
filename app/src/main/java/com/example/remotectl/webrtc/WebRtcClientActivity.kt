@@ -63,6 +63,8 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.editTurnUrl.setText(prefs.get(Prefs.NET_TURN_URL))
         b.editTurnUser.setText(prefs.get(Prefs.NET_TURN_USER))
         b.editTurnCred.setText(prefs.get(Prefs.NET_TURN_CRED))
+        b.editCfKey.setText(prefs.get(Prefs.CF_KEY_ID))
+        b.editCfToken.setText(prefs.get(Prefs.CF_TOKEN))
 
         val hasSaved = prefs.has(Prefs.NET_URL) && prefs.has(Prefs.NET_CODE) && prefs.has(Prefs.NET_PIN)
         b.btnQuick.visibility = if (hasSaved) View.VISIBLE else View.GONE
@@ -106,6 +108,8 @@ class WebRtcClientActivity : AppCompatActivity() {
             prefs.put(Prefs.NET_TURN_URL, b.editTurnUrl.text.toString().trim())
             prefs.put(Prefs.NET_TURN_USER, b.editTurnUser.text.toString().trim())
             prefs.put(Prefs.NET_TURN_CRED, b.editTurnCred.text.toString().trim())
+            prefs.put(Prefs.CF_KEY_ID, b.editCfKey.text.toString().trim())
+            prefs.put(Prefs.CF_TOKEN, b.editCfToken.text.toString().trim())
             com.example.remotectl.widget.RemoteWidgetProvider.updateAll(this)
             start(url, code)
         }
@@ -146,11 +150,20 @@ class WebRtcClientActivity : AppCompatActivity() {
         offerSent = false
         b.txtStatus.text = "연결 중…"
 
-        val ice = RtcConfig.iceServers(
-            b.editTurnUrl.text.toString().trim().ifBlank { null },
-            b.editTurnUser.text.toString().trim().ifBlank { null },
-            b.editTurnCred.text.toString().trim().ifBlank { null },
-        )
+        val cfKey = prefs.get(Prefs.CF_KEY_ID).ifBlank { null }
+        val cfToken = prefs.get(Prefs.CF_TOKEN).ifBlank { null }
+        val turnUrl = b.editTurnUrl.text.toString().trim().ifBlank { null }
+        val turnUser = b.editTurnUser.text.toString().trim().ifBlank { null }
+        val turnCred = b.editTurnCred.text.toString().trim().ifBlank { null }
+        if (cfKey != null) b.txtStatus.text = "TURN 자격증명 받는 중…"
+        kotlin.concurrent.thread {
+            val ice = RtcConfig.buildIceServers(cfKey, cfToken, turnUrl, turnUser, turnCred)
+            runOnUiThread { if (!isFinishing && !isDestroyed) continueConnect(url, code, ice) }
+        }
+    }
+
+    private fun continueConnect(url: String, code: String, ice: List<PeerConnection.IceServer>) {
+        if (factory == null) return
         val rtcConfig = PeerConnection.RTCConfiguration(ice).apply {
             sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
             continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY

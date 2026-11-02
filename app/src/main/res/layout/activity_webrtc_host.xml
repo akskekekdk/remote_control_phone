@@ -63,7 +63,29 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TURN 서버 (선택, 통신사망 연결용)"
+            android:text="Cloudflare TURN (권장, 선택)"
+            android:textColor="#777"
+            android:layout_marginTop="4dp" />
+        <EditText
+            android:id="@+id/editCfKey"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Cloudflare Turn Key ID"
+            android:textColorHint="#555"
+            android:textColor="#FFFFFF" />
+        <EditText
+            android:id="@+id/editCfToken"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Cloudflare API Token"
+            android:textColorHint="#555"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="직접 TURN (선택)"
             android:textColor="#777"
             android:layout_marginTop="4dp" />
         <EditText

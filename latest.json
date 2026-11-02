@@ -1,6 +1,6 @@
 {
-  "versionCode": 12,
-  "versionName": "2.1",
+  "versionCode": 13,
+  "versionName": "2.2",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "연결이 끊기면 자동으로 재연결(ICE 복구). 몇 초 뒤 멈추던 문제 완화"
+  "notes": "Cloudflare TURN 지원(Key ID + API Token 입력 시 자동 자격증명 발급). 안정적 연결용"
 }

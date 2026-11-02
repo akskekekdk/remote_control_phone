@@ -66,11 +66,20 @@ class WebRtcHostService : Service() {
         val turnUrl = intent.getStringExtra(EXTRA_TURN_URL)
         val turnUser = intent.getStringExtra(EXTRA_TURN_USER)
         val turnCred = intent.getStringExtra(EXTRA_TURN_CRED)
+        val cfKey = intent.getStringExtra(EXTRA_CF_KEY)
+        val cfToken = intent.getStringExtra(EXTRA_CF_TOKEN)
         pin = intent.getStringExtra(EXTRA_PIN) ?: ""
 
         computeResolution()
-        initWebRtc(data, RtcConfig.iceServers(turnUrl, turnUser, turnCred))
-        startSignaling(signalUrl, room)
+        // ICE 서버는 네트워크(Cloudflare 발급)일 수 있어 백그라운드에서 준비 후 시작
+        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        Thread({
+            val ice = RtcConfig.buildIceServers(cfKey, cfToken, turnUrl, turnUser, turnCred)
+            mainHandler.post {
+                initWebRtc(data, ice)
+                startSignaling(signalUrl, room)
+            }
+        }, "rc-ice").start()
         return START_STICKY
     }
 
@@ -238,6 +247,8 @@ class WebRtcHostService : Service() {
         const val EXTRA_TURN_URL = "turn_url"
         const val EXTRA_TURN_USER = "turn_user"
         const val EXTRA_TURN_CRED = "turn_cred"
+        const val EXTRA_CF_KEY = "cf_key"
+        const val EXTRA_CF_TOKEN = "cf_token"
         const val EXTRA_PIN = "pin"
         const val ACTION_STOP = "stop"
     }

@@ -33,6 +33,31 @@ object RtcConfig {
     )
 
     /**
+     * 최종 ICE 서버 목록.
+     * 1순위: Cloudflare TURN(자격증명 자동 발급) — 설정돼 있으면 사용
+     * 2순위: 사용자가 입력한 TURN
+     * 3순위: 무료 공개 TURN 기본값
+     * ⚠️ Cloudflare 호출은 네트워크라 반드시 백그라운드 스레드에서 호출할 것.
+     */
+    fun buildIceServers(
+        cfKeyId: String?, cfToken: String?,
+        turnUrl: String?, turnUser: String?, turnCred: String?,
+    ): List<PeerConnection.IceServer> {
+        if (!cfKeyId.isNullOrBlank() && !cfToken.isNullOrBlank()) {
+            val cf = CloudflareTurn.fetchIceServers(cfKeyId, cfToken)
+            if (cf != null) {
+                // Cloudflare 결과 + 백업 STUN
+                val list = ArrayList<PeerConnection.IceServer>()
+                STUN.forEach { list.add(PeerConnection.IceServer.builder(it).createIceServer()) }
+                list.addAll(cf)
+                return list
+            }
+            // 발급 실패 시 아래 폴백
+        }
+        return iceServers(turnUrl, turnUser, turnCred)
+    }
+
+    /**
      * ICE 서버 목록 생성.
      * 사용자가 TURN 을 입력하면 그것을, 없으면 무료 공개 TURN 기본값을 사용한다.
      */
