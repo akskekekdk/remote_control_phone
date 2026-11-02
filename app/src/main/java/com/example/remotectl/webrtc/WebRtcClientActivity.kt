@@ -41,6 +41,8 @@ class WebRtcClientActivity : AppCompatActivity() {
     private var pin = ""
     private val prefs by lazy { Prefs(this) }
     private var reconnectOnResume = false
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val recoveryRunnable = Runnable { recoverConnection() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -120,8 +122,27 @@ class WebRtcClientActivity : AppCompatActivity() {
         }
     }
 
+    /** ICE 가 끊기면 delay 후 자동 복구(재연결). 그 전에 다시 연결되면 취소됨. */
+    private fun scheduleRecovery(delayMs: Long) {
+        mainHandler.removeCallbacks(recoveryRunnable)
+        mainHandler.postDelayed(recoveryRunnable, delayMs)
+    }
+
+    /** 저장된 값으로 연결을 다시 맺는다(끊김 자동 복구). */
+    private fun recoverConnection() {
+        if (isFinishing || isDestroyed) return
+        val url = b.editUrl.text.toString().trim()
+        val code = b.editCode.text.toString().trim()
+        pin = b.editPin.text.toString().trim()
+        if (url.isBlank() || code.isBlank() || pin.isBlank()) return
+        b.txtStatus.text = "재연결 중…"
+        disconnect()
+        start(url, code)
+    }
+
     private fun start(url: String, code: String) {
         if (factory == null) return
+        mainHandler.removeCallbacks(recoveryRunnable)
         offerSent = false
         b.txtStatus.text = "연결 중…"
 
@@ -137,6 +158,19 @@ class WebRtcClientActivity : AppCompatActivity() {
         pc = factory!!.createPeerConnection(rtcConfig, object : PcObserver() {
             override fun onIceCandidate(c: IceCandidate) {
                 signaling?.sendCandidate(c.sdp, c.sdpMid, c.sdpMLineIndex)
+            }
+            override fun onIceConnectionChange(state: PeerConnection.IceConnectionState?) {
+                when (state) {
+                    PeerConnection.IceConnectionState.CONNECTED,
+                    PeerConnection.IceConnectionState.COMPLETED ->
+                        mainHandler.removeCallbacks(recoveryRunnable) // 복구 예약 취소
+                    PeerConnection.IceConnectionState.DISCONNECTED ->
+                        scheduleRecovery(6000) // 잠깐 끊김 — 곧 복구 안 되면 재연결
+                    PeerConnection.IceConnectionState.FAILED,
+                    PeerConnection.IceConnectionState.CLOSED ->
+                        scheduleRecovery(1200) // 끊김 — 바로 재연결
+                    else -> {}
+                }
             }
             override fun onAddTrack(receiver: RtpReceiver?, streams: Array<out MediaStream>?) {
                 val track = receiver?.track()
@@ -262,6 +296,7 @@ class WebRtcClientActivity : AppCompatActivity() {
 
     override fun onStop() {
         // 앱을 벗어나면 연결을 정리. 조종 중이었다면 돌아왔을 때 자동 재접속.
+        mainHandler.removeCallbacks(recoveryRunnable)
         reconnectOnResume = (b.overlayConnect.visibility == View.GONE)
         disconnect()
         b.overlayConnect.visibility = View.VISIBLE
@@ -278,6 +313,7 @@ class WebRtcClientActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        mainHandler.removeCallbacks(recoveryRunnable)
         disconnect()
         try { b.renderer.release() } catch (_: Exception) {}
         try { factory?.dispose() } catch (_: Exception) {}

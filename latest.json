@@ -1,6 +1,6 @@
 {
-  "versionCode": 11,
-  "versionName": "2.0",
+  "versionCode": 12,
+  "versionName": "2.1",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "보안 강화: PIN 무차별 대입 차단(서버), 신호 서버 이름 비노출. 잠김 시 자동재접속 중단"
+  "notes": "연결이 끊기면 자동으로 재연결(ICE 복구). 몇 초 뒤 멈추던 문제 완화"
 }
