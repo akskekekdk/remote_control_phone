@@ -17,10 +17,10 @@ import java.util.concurrent.TimeUnit
  *   - API Token (token)
  * 을 받아 앱에 입력하면, 접속할 때마다 이 함수가 ICE 서버 목록을 생성한다.
  *
- * API: POST https://rtc.live.cloudflare.com/v1/turn/keys/{keyId}/credentials/generate
+ * API: POST https://rtc.live.cloudflare.com/v1/turn/keys/{keyId}/credentials/generate-ice-servers
  *      Authorization: Bearer {token}
  *      body: { "ttl": 86400 }
- *      resp: { "iceServers": { "urls": [...], "username": "...", "credential": "..." } }
+ *      resp: { "iceServers": [ { "urls": [...], "username": "...", "credential": "..." } ] }
  */
 object CloudflareTurn {
     private const val TAG = "CloudflareTurn"
@@ -30,54 +30,63 @@ object CloudflareTurn {
 
     /** 동기 호출(백그라운드 스레드에서 사용). 실패 시 null. */
     fun fetchIceServers(keyId: String, token: String): List<PeerConnection.IceServer>? {
-        return try {
-            val url = "https://rtc.live.cloudflare.com/v1/turn/keys/$keyId/credentials/generate"
-            val body = JSONObject().put("ttl", 86400).toString()
-                .toRequestBody("application/json".toMediaType())
-            val req = Request.Builder()
-                .url(url)
-                .addHeader("Authorization", "Bearer $token")
-                .post(body)
-                .build()
-            http.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) { Log.w(TAG, "HTTP ${resp.code}"); return null }
-                val json = resp.body?.string() ?: return null
-                parse(json)
+        // 공식 엔드포인트(generate-ice-servers) 우선, 안 되면 구 엔드포인트(generate)
+        for (path in listOf("generate-ice-servers", "generate")) {
+            try {
+                val url = "https://rtc.live.cloudflare.com/v1/turn/keys/$keyId/credentials/$path"
+                val body = JSONObject().put("ttl", 86400).toString()
+                    .toRequestBody("application/json".toMediaType())
+                val req = Request.Builder()
+                    .url(url)
+                    .addHeader("Authorization", "Bearer $token")
+                    .post(body)
+                    .build()
+                val result = http.newCall(req).execute().use { resp ->
+                    if (!resp.isSuccessful) { Log.w(TAG, "$path HTTP ${resp.code}"); null }
+                    else resp.body?.string()?.let { parse(it) }
+                }
+                if (result != null) return result
+            } catch (e: Exception) {
+                Log.w(TAG, "$path failed: ${e.message}")
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "fetch failed: ${e.message}")
-            null
         }
+        return null
     }
 
+    /** iceServers 가 배열([{urls,username,credential}, ...])이든 단일 객체든 처리 */
     private fun parse(json: String): List<PeerConnection.IceServer>? {
         val root = JSONObject(json)
-        val ice = root.optJSONObject("iceServers") ?: return null
-        val username = ice.optString("username", "")
-        val credential = ice.optString("credential", "")
-
-        // urls 는 배열 또는 단일 문자열
-        val urls = ArrayList<String>()
-        val arr = ice.optJSONArray("urls")
+        val entries = ArrayList<JSONObject>()
+        val arr = root.optJSONArray("iceServers")
         if (arr != null) {
-            for (i in 0 until arr.length()) urls.add(arr.getString(i))
+            for (i in 0 until arr.length()) arr.optJSONObject(i)?.let { entries.add(it) }
         } else {
-            ice.optString("urls").takeIf { it.isNotBlank() }?.let { urls.add(it) }
+            root.optJSONObject("iceServers")?.let { entries.add(it) }
         }
-        if (urls.isEmpty()) return null
 
         val list = ArrayList<PeerConnection.IceServer>()
-        // STUN(인증 불필요)과 TURN(인증 필요)을 분리해서 등록
-        val stun = urls.filter { it.startsWith("stun:") }
-        val turn = urls.filter { it.startsWith("turn:") || it.startsWith("turns:") }
-        if (stun.isNotEmpty()) list.add(PeerConnection.IceServer.builder(stun).createIceServer())
-        if (turn.isNotEmpty()) {
-            list.add(
-                PeerConnection.IceServer.builder(turn)
-                    .setUsername(username)
-                    .setPassword(credential)
-                    .createIceServer()
-            )
+        for (ice in entries) {
+            val username = ice.optString("username", "")
+            val credential = ice.optString("credential", "")
+            val urls = ArrayList<String>()
+            val u = ice.optJSONArray("urls")
+            if (u != null) {
+                for (i in 0 until u.length()) urls.add(u.getString(i))
+            } else {
+                ice.optString("urls").takeIf { it.isNotBlank() }?.let { urls.add(it) }
+            }
+            // STUN(인증 불필요)과 TURN(인증 필요)을 분리해서 등록
+            val stun = urls.filter { it.startsWith("stun:") }
+            val turn = urls.filter { it.startsWith("turn:") || it.startsWith("turns:") }
+            if (stun.isNotEmpty()) list.add(PeerConnection.IceServer.builder(stun).createIceServer())
+            if (turn.isNotEmpty()) {
+                list.add(
+                    PeerConnection.IceServer.builder(turn)
+                        .setUsername(username)
+                        .setPassword(credential)
+                        .createIceServer()
+                )
+            }
         }
         return list.ifEmpty { null }
     }
