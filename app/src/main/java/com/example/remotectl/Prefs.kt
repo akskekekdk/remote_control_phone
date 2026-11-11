@@ -29,5 +29,7 @@ class Prefs(context: Context) {
         // 이번 달 중계(TURN) 수신량
         const val USAGE_MONTH = "usage_month"
         const val USAGE_BYTES = "usage_bytes"
+        // 화질 단계 index
+        const val QUALITY_INDEX = "quality_index"
     }
 }

@@ -149,22 +149,37 @@ class WebRtcHostService : Service() {
                 val bytes = ByteArray(buffer.data.remaining())
                 buffer.data.get(bytes)
                 val msg = String(bytes, StandardCharsets.UTF_8)
-                try { InputCodec.apply(msg, realW, realH) }
-                catch (e: Exception) { Log.w(TAG, "input apply: ${e.message}") }
+                try {
+                    if (msg.contains("\"quality\"")) {
+                        val o = org.json.JSONObject(msg)
+                        if (o.optString("t") == "quality") {
+                            curBitrate = o.optInt("bitrate", curBitrate)
+                            curFps = o.optInt("fps", curFps)
+                            applyBitrateCap()
+                            return
+                        }
+                    }
+                    InputCodec.apply(msg, realW, realH)
+                } catch (e: Exception) { Log.w(TAG, "input apply: ${e.message}") }
             }
         })
         pc = newPc
     }
 
     private var videoSender: org.webrtc.RtpSender? = null
+    @Volatile private var curBitrate = RtcConfig.QUALITIES[RtcConfig.DEFAULT_QUALITY_INDEX].bitrate
+    @Volatile private var curFps = RtcConfig.QUALITIES[RtcConfig.DEFAULT_QUALITY_INDEX].fps
 
-    /** 영상 전송량 상한 적용. 협상 전에는 encodings 가 비어 있을 수 있어 answer 뒤에도 다시 호출한다. */
+    /** 영상 전송량/프레임레이트 적용. 협상 전에는 encodings 가 비어 있을 수 있어 answer 뒤에도 다시 호출한다. */
     private fun applyBitrateCap() {
         val s = videoSender ?: return
         try {
             val p = s.parameters
             if (p.encodings.isEmpty()) return
-            p.encodings.forEach { it.maxBitrateBps = RtcConfig.MAX_VIDEO_BITRATE_BPS }
+            p.encodings.forEach {
+                it.maxBitrateBps = curBitrate
+                it.maxFramerate = curFps
+            }
             s.parameters = p
         } catch (e: Exception) {
             Log.w(TAG, "bitrate cap: ${e.message}")

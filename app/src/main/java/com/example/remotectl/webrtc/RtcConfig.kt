@@ -18,6 +18,15 @@ object RtcConfig {
     // 영상 전송량 상한(약 1Mbps). 24시간 중계해도 월 약 330GB 수준으로 묶는다.
     const val MAX_VIDEO_BITRATE_BPS = 1_000_000
 
+    // 화질 단계 (조종 화면에서 버튼으로 전환). 낮을수록 데이터 절약, 높을수록 선명.
+    data class Quality(val name: String, val bitrate: Int, val fps: Int)
+    val QUALITIES = listOf(
+        Quality("데이터절약", 500_000, 20),
+        Quality("표준", 1_000_000, 30),
+        Quality("고화질", 2_500_000, 40),
+    )
+    const val DEFAULT_QUALITY_INDEX = 1
+
     // 공개 STUN (무료).
     private val STUN = listOf(
         "stun:stun.l.google.com:19302",

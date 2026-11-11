@@ -22,6 +22,10 @@ object InputCodec {
 
     fun key(k: Int) = JSONObject().put("t", "key").put("k", k).toString()
 
+    /** 화질(영상 전송량) 변경 요청. bitrate = 초당 비트, fps = 프레임레이트 */
+    fun quality(bitrate: Int, fps: Int) =
+        JSONObject().put("t", "quality").put("bitrate", bitrate).put("fps", fps).toString()
+
     /** B 쪽: 수신 메시지를 실제 화면 픽셀 터치로 실행 */
     fun apply(json: String, screenW: Float, screenH: Float) {
         val a11y = ControlAccessibilityService.instance ?: return

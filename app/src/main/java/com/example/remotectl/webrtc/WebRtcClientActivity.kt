@@ -41,6 +41,7 @@ class WebRtcClientActivity : AppCompatActivity() {
     private var pin = ""
     private val prefs by lazy { Prefs(this) }
     private var reconnectOnResume = false
+    private var qualityIndex = RtcConfig.DEFAULT_QUALITY_INDEX
     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private val recoveryRunnable = Runnable { recoverConnection() }
 
@@ -85,6 +86,8 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.renderer.init(eglBase.eglBaseContext, object : RendererCommon.RendererEvents {
             override fun onFirstFrameRendered() {
                 runOnUiThread { b.txtStatus.text = "영상 수신 중" }
+                // 데이터채널이 열렸으니 현재 화질 설정을 B에 반영
+                mainHandler.postDelayed({ sendQuality() }, 500)
             }
             override fun onFrameResolutionChanged(w: Int, h: Int, rotation: Int) {
                 runOnUiThread { fitRenderer(if (rotation % 180 == 0) w else h,
@@ -127,6 +130,17 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.btnBack.setOnClickListener { sendInput(InputCodec.key(0)) }
         b.btnHome.setOnClickListener { sendInput(InputCodec.key(1)) }
         b.btnRecents.setOnClickListener { sendInput(InputCodec.key(2)) }
+
+        qualityIndex = (prefs.get(Prefs.QUALITY_INDEX).toIntOrNull()
+            ?: RtcConfig.DEFAULT_QUALITY_INDEX).coerceIn(0, RtcConfig.QUALITIES.size - 1)
+        updateQualityButton()
+        b.btnQuality.setOnClickListener {
+            qualityIndex = (qualityIndex + 1) % RtcConfig.QUALITIES.size
+            prefs.put(Prefs.QUALITY_INDEX, qualityIndex.toString())
+            updateQualityButton()
+            sendQuality()
+            toast("화질: ${RtcConfig.QUALITIES[qualityIndex].name}")
+        }
 
         setupTouch()
 
@@ -344,6 +358,16 @@ class WebRtcClientActivity : AppCompatActivity() {
             }
             true
         }
+    }
+
+    private fun updateQualityButton() {
+        b.btnQuality.text = "화질\n${RtcConfig.QUALITIES[qualityIndex].name}"
+    }
+
+    /** 현재 화질 단계를 B에게 전달 → B가 전송량/프레임레이트 조절 */
+    private fun sendQuality() {
+        val q = RtcConfig.QUALITIES[qualityIndex]
+        sendInput(InputCodec.quality(q.bitrate, q.fps))
     }
 
     private fun sendInput(json: String) {
