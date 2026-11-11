@@ -42,6 +42,8 @@ class WebRtcClientActivity : AppCompatActivity() {
     private val prefs by lazy { Prefs(this) }
     private var reconnectOnResume = false
     private var qualityIndex = RtcConfig.DEFAULT_QUALITY_INDEX
+    private var lastRecovery = 0L
+    private var cachedIce: List<PeerConnection.IceServer>? = null
     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private val recoveryRunnable = Runnable { recoverConnection() }
 
@@ -124,6 +126,7 @@ class WebRtcClientActivity : AppCompatActivity() {
             prefs.put(Prefs.CF_KEY_ID, b.editCfKey.text.toString().trim())
             prefs.put(Prefs.CF_TOKEN, b.editCfToken.text.toString().trim())
             com.example.remotectl.widget.RemoteWidgetProvider.updateAll(this)
+            cachedIce = null // 새로 입력한 값(TURN 등)으로 다시 받도록
             start(url, code)
         }
 
@@ -156,9 +159,15 @@ class WebRtcClientActivity : AppCompatActivity() {
         mainHandler.postDelayed(recoveryRunnable, delayMs)
     }
 
-    /** 저장된 값으로 연결을 다시 맺는다(끊김 자동 복구). */
+    /** 저장된 값으로 연결을 다시 맺는다(끊김 자동 복구). 너무 잦은 재연결은 막는다. */
     private fun recoverConnection() {
         if (isFinishing || isDestroyed) return
+        // 이미 다시 연결돼 있으면(스스로 복구됨) 아무것도 하지 않음
+        if (pc?.iceConnectionState() == PeerConnection.IceConnectionState.CONNECTED ||
+            pc?.iceConnectionState() == PeerConnection.IceConnectionState.COMPLETED) return
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (now - lastRecovery < 12_000) { scheduleRecovery(12_000 - (now - lastRecovery)); return }
+        lastRecovery = now
         val url = b.editUrl.text.toString().trim()
         val code = b.editCode.text.toString().trim()
         pin = b.editPin.text.toString().trim()
@@ -226,9 +235,16 @@ class WebRtcClientActivity : AppCompatActivity() {
         val turnUrl = b.editTurnUrl.text.toString().trim().ifBlank { null }
         val turnUser = b.editTurnUser.text.toString().trim().ifBlank { null }
         val turnCred = b.editTurnCred.text.toString().trim().ifBlank { null }
+        // 캐시된 ICE(이미 받아둔 Cloudflare 자격증명)가 있으면 재사용 → 재연결이 빠름
+        val reuse = cachedIce
+        if (reuse != null && reuse.isNotEmpty()) {
+            continueConnect(url, code, reuse)
+            return
+        }
         if (cfKey != null) b.txtStatus.text = "TURN 자격증명 받는 중…"
         kotlin.concurrent.thread {
             val ice = RtcConfig.buildIceServers(cfKey, cfToken, turnUrl, turnUser, turnCred)
+            if (ice.isNotEmpty()) cachedIce = ice
             runOnUiThread { if (!isFinishing && !isDestroyed) continueConnect(url, code, ice) }
         }
     }
@@ -249,13 +265,19 @@ class WebRtcClientActivity : AppCompatActivity() {
             override fun onIceConnectionChange(state: PeerConnection.IceConnectionState?) {
                 when (state) {
                     PeerConnection.IceConnectionState.CONNECTED,
-                    PeerConnection.IceConnectionState.COMPLETED ->
+                    PeerConnection.IceConnectionState.COMPLETED -> {
                         mainHandler.removeCallbacks(recoveryRunnable) // 복구 예약 취소
-                    PeerConnection.IceConnectionState.DISCONNECTED ->
-                        scheduleRecovery(6000) // 잠깐 끊김 — 곧 복구 안 되면 재연결
+                        runOnUiThread { if (remoteTrack != null) b.txtStatus.text = "영상 수신 중" }
+                    }
+                    PeerConnection.IceConnectionState.DISCONNECTED -> {
+                        // 모바일에선 잠깐 불안정했다가 스스로 복구되는 일이 흔하다.
+                        // 끊지 말고 기다리되, 15초 넘게 안 돌아오면 그때 재연결.
+                        runOnUiThread { b.txtStatus.text = "연결 불안정…" }
+                        scheduleRecovery(15000)
+                    }
                     PeerConnection.IceConnectionState.FAILED,
                     PeerConnection.IceConnectionState.CLOSED ->
-                        scheduleRecovery(1200) // 끊김 — 바로 재연결
+                        scheduleRecovery(2500) // 실패 — 재연결
                     else -> {}
                 }
             }

@@ -1,6 +1,6 @@
 {
-  "versionCode": 16,
-  "versionName": "2.5",
+  "versionCode": 17,
+  "versionName": "2.6",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "화질(데이터절약/표준/고화질) 버튼 추가, 조종 버튼을 왼쪽 세로 바로 이동"
+  "notes": "뚝뚝 끊김 완화: 잠깐 불안정은 기다리고(끊지 않음), 실제 실패만 재연결, TURN 자격증명 캐시로 재연결 가속"
 }
