@@ -26,5 +26,8 @@ class Prefs(context: Context) {
         // Cloudflare TURN (자동 자격증명 발급)
         const val CF_KEY_ID = "cf_key_id"
         const val CF_TOKEN = "cf_token"
+        // 이번 달 중계(TURN) 수신량
+        const val USAGE_MONTH = "usage_month"
+        const val USAGE_BYTES = "usage_bytes"
     }
 }

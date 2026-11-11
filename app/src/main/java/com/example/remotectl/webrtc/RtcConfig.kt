@@ -15,6 +15,9 @@ object RtcConfig {
     // 기본 신호 서버 주소 (반드시 본인 서버로 교체). 예: wss://your-host.example/ws
     const val DEFAULT_SIGNALING_URL = "wss://example.com/ws"
 
+    // 영상 전송량 상한(약 1Mbps). 24시간 중계해도 월 약 330GB 수준으로 묶는다.
+    const val MAX_VIDEO_BITRATE_BPS = 1_000_000
+
     // 공개 STUN (무료).
     private val STUN = listOf(
         "stun:stun.l.google.com:19302",

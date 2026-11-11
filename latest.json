@@ -1,6 +1,6 @@
 {
-  "versionCode": 14,
-  "versionName": "2.3",
+  "versionCode": 15,
+  "versionName": "2.4",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "Cloudflare TURN 발급 주소/응답 형식 수정 (generate-ice-servers)"
+  "notes": "영상 전송량 약 1Mbps로 제한 + 월 중계 사용량 900GB 넘으면 자동 차단 (Cloudflare 무료 한도 보호)"
 }

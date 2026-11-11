@@ -138,7 +138,8 @@ class WebRtcHostService : Service() {
                 signaling?.sendCandidate(c.sdp, c.sdpMid, c.sdpMLineIndex)
             }
         }) ?: return
-        newPc.addTrack(videoTrack, listOf("stream0"))
+        videoSender = newPc.addTrack(videoTrack, listOf("stream0"))
+        applyBitrateCap()
         val dc = newPc.createDataChannel("input", DataChannel.Init())
         dataChannel = dc
         dc.registerObserver(object : DataChannel.Observer {
@@ -153,6 +154,21 @@ class WebRtcHostService : Service() {
             }
         })
         pc = newPc
+    }
+
+    private var videoSender: org.webrtc.RtpSender? = null
+
+    /** 영상 전송량 상한 적용. 협상 전에는 encodings 가 비어 있을 수 있어 answer 뒤에도 다시 호출한다. */
+    private fun applyBitrateCap() {
+        val s = videoSender ?: return
+        try {
+            val p = s.parameters
+            if (p.encodings.isEmpty()) return
+            p.encodings.forEach { it.maxBitrateBps = RtcConfig.MAX_VIDEO_BITRATE_BPS }
+            s.parameters = p
+        } catch (e: Exception) {
+            Log.w(TAG, "bitrate cap: ${e.message}")
+        }
     }
 
     private fun createAndSendOffer() {
@@ -194,8 +210,9 @@ class WebRtcHostService : Service() {
             }
 
             override fun onAnswer(sdp: String) {
-                pc?.setRemoteDescription(SdpObserverAdapter(),
-                    SessionDescription(SessionDescription.Type.ANSWER, sdp))
+                pc?.setRemoteDescription(object : SdpObserverAdapter() {
+                    override fun onSetSuccess() { applyBitrateCap() }
+                }, SessionDescription(SessionDescription.Type.ANSWER, sdp))
             }
 
             override fun onCandidate(candidate: String, sdpMid: String?, sdpMLineIndex: Int) {

@@ -44,6 +44,15 @@ class WebRtcClientActivity : AppCompatActivity() {
     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private val recoveryRunnable = Runnable { recoverConnection() }
 
+    // 중계 사용량 측정 (5초마다 통계 확인)
+    private var lastTransportBytes = 0L
+    private val statsRunnable = object : Runnable {
+        override fun run() {
+            pollUsage()
+            mainHandler.postDelayed(this, 5000)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivityWebrtcClientBinding.inflate(layoutInflater)
@@ -65,6 +74,7 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.editTurnCred.setText(prefs.get(Prefs.NET_TURN_CRED))
         b.editCfKey.setText(prefs.get(Prefs.CF_KEY_ID))
         b.editCfToken.setText(prefs.get(Prefs.CF_TOKEN))
+        b.txtUsage.text = UsageMeter.label(prefs)
 
         val hasSaved = prefs.has(Prefs.NET_URL) && prefs.has(Prefs.NET_CODE) && prefs.has(Prefs.NET_PIN)
         b.btnQuick.visibility = if (hasSaved) View.VISIBLE else View.GONE
@@ -144,9 +154,56 @@ class WebRtcClientActivity : AppCompatActivity() {
         start(url, code)
     }
 
+    /** 연결 통계에서 받은 바이트를 읽어, TURN 중계 중일 때만 월 사용량에 더한다. */
+    private fun pollUsage() {
+        val p = pc ?: return
+        p.getStats { report ->
+            try {
+                val stats = report.statsMap
+                var total = 0L
+                var relayed = false
+                var pairKnown = false
+                for (s in stats.values) {
+                    if (s.type != "transport") continue
+                    total += (s.members["bytesReceived"] as? Number)?.toLong() ?: 0L
+                    val pair = stats[s.members["selectedCandidatePairId"] as? String ?: ""] ?: continue
+                    pairKnown = true
+                    for (key in listOf("localCandidateId", "remoteCandidateId")) {
+                        val cand = stats[pair.members[key] as? String ?: ""] ?: continue
+                        if (cand.members["candidateType"] == "relay") relayed = true
+                    }
+                }
+                val delta = total - lastTransportBytes
+                lastTransportBytes = total
+                // 경로를 알 수 없으면 보수적으로 중계로 간주
+                if (delta > 0 && (relayed || !pairKnown)) {
+                    UsageMeter.add(prefs, delta)
+                    if (UsageMeter.isOver(prefs)) runOnUiThread { stopForUsageLimit() }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "stats: ${e.message}")
+            }
+        }
+    }
+
+    private fun stopForUsageLimit() {
+        if (isFinishing || isDestroyed) return
+        mainHandler.removeCallbacks(recoveryRunnable)
+        reconnectOnResume = false
+        disconnect()
+        b.overlayConnect.visibility = View.VISIBLE
+        b.txtUsage.text = UsageMeter.label(prefs)
+        b.txtStatus.text = "이번 달 중계 사용량 상한(900GB)에 도달해 접속을 멈췄습니다. 다음 달에 다시 쓸 수 있습니다."
+    }
+
     private fun start(url: String, code: String) {
         if (factory == null) return
         mainHandler.removeCallbacks(recoveryRunnable)
+        if (prefs.has(Prefs.CF_KEY_ID) && UsageMeter.isOver(prefs)) {
+            b.txtUsage.text = UsageMeter.label(prefs)
+            b.txtStatus.text = "이번 달 중계 사용량 상한(900GB)에 도달해 접속할 수 없습니다. 다음 달에 다시 쓸 수 있습니다."
+            return
+        }
         offerSent = false
         b.txtStatus.text = "연결 중…"
 
@@ -164,6 +221,9 @@ class WebRtcClientActivity : AppCompatActivity() {
 
     private fun continueConnect(url: String, code: String, ice: List<PeerConnection.IceServer>) {
         if (factory == null) return
+        lastTransportBytes = 0L
+        mainHandler.removeCallbacks(statsRunnable)
+        mainHandler.postDelayed(statsRunnable, 5000)
         val rtcConfig = PeerConnection.RTCConfiguration(ice).apply {
             sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
             continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
@@ -296,6 +356,7 @@ class WebRtcClientActivity : AppCompatActivity() {
 
     /** 연결만 끊는다(팩토리/렌더러는 유지). 돌아오면 '바로 접속'으로 재연결. */
     private fun disconnect() {
+        mainHandler.removeCallbacks(statsRunnable)
         try { remoteTrack?.removeSink(b.renderer) } catch (_: Exception) {}
         remoteTrack = null
         try { signaling?.close() } catch (_: Exception) {}
@@ -314,6 +375,7 @@ class WebRtcClientActivity : AppCompatActivity() {
         disconnect()
         b.overlayConnect.visibility = View.VISIBLE
         b.txtStatus.text = ""
+        b.txtUsage.text = UsageMeter.label(prefs)
         super.onStop()
     }
 
