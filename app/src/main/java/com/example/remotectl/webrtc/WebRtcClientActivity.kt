@@ -453,7 +453,13 @@ class WebRtcClientActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (reconnectOnResume && factory != null) {
+        // 조종 중(영상 화면)이었는데 연결이 살아있지 않으면 재접속.
+        // (홈 눌렀다 복귀 시 onStop 이 안 오고 백그라운드에서 끊겨 화면이 얼어붙는 경우 포함)
+        val shouldBeConnected = b.overlayConnect.visibility == View.GONE
+        val ice = pc?.iceConnectionState()
+        val healthy = ice == PeerConnection.IceConnectionState.CONNECTED ||
+            ice == PeerConnection.IceConnectionState.COMPLETED
+        if (factory != null && (reconnectOnResume || (shouldBeConnected && !healthy))) {
             reconnectOnResume = false
             showConnecting() // 입력창 없이 바로 재접속
             b.btnConnect.performClick()

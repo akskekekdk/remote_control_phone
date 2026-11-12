@@ -1,6 +1,6 @@
 {
-  "versionCode": 20,
-  "versionName": "2.9",
+  "versionCode": 21,
+  "versionName": "2.10",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "왼쪽 버튼 아이콘 기반 깔끔한 디자인 + 화면 세로 꽉 채우기 적용"
+  "notes": "홈 눌렀다 복귀 시 멈춤(얼어붙음) 수정 — 복귀 시 연결 상태 확인 후 자동 재접속"
 }
