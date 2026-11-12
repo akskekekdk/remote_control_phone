@@ -68,6 +68,7 @@ class WebRtcHostService : Service() {
         val turnCred = intent.getStringExtra(EXTRA_TURN_CRED)
         val cfKey = intent.getStringExtra(EXTRA_CF_KEY)
         val cfToken = intent.getStringExtra(EXTRA_CF_TOKEN)
+        forceRelay = intent.getBooleanExtra(EXTRA_FORCE_RELAY, false)
         pin = intent.getStringExtra(EXTRA_PIN) ?: ""
 
         computeResolution()
@@ -75,6 +76,9 @@ class WebRtcHostService : Service() {
         val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
         Thread({
             val ice = RtcConfig.buildIceServers(cfKey, cfToken, turnUrl, turnUser, turnCred)
+            // 중계 가능 여부: Cloudflare 발급 성공 또는 직접 TURN 입력
+            relayAvailable = (!cfKey.isNullOrBlank() && CloudflareTurn.lastResult.startsWith("OK")) ||
+                !turnUrl.isNullOrBlank()
             mainHandler.post {
                 initWebRtc(data, ice)
                 startSignaling(signalUrl, room)
@@ -123,6 +127,8 @@ class WebRtcHostService : Service() {
     }
 
     @Volatile private var offered = false
+    @Volatile private var forceRelay = false
+    @Volatile private var relayAvailable = false
 
     /** 접속(재접속)마다 새 PeerConnection 을 만든다 → A가 나갔다 다시 와도 연결됨. */
     private fun createPeerConnection() {
@@ -132,6 +138,9 @@ class WebRtcHostService : Service() {
         val rtcConfig = PeerConnection.RTCConfiguration(iceServers).apply {
             sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
             continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
+            // A·B 양쪽 중계(relay/relay)가 모바일에서 가장 안정적. 중계 쓸 수 있을 때만.
+            if (forceRelay && relayAvailable)
+                iceTransportsType = PeerConnection.IceTransportsType.RELAY
         }
         val newPc = factory!!.createPeerConnection(rtcConfig, object : PcObserver() {
             override fun onIceCandidate(c: IceCandidate) {
@@ -281,6 +290,7 @@ class WebRtcHostService : Service() {
         const val EXTRA_TURN_CRED = "turn_cred"
         const val EXTRA_CF_KEY = "cf_key"
         const val EXTRA_CF_TOKEN = "cf_token"
+        const val EXTRA_FORCE_RELAY = "force_relay"
         const val EXTRA_PIN = "pin"
         const val ACTION_STOP = "stop"
     }

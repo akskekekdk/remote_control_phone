@@ -1,6 +1,6 @@
 {
-  "versionCode": 24,
-  "versionName": "2.13",
+  "versionCode": 25,
+  "versionName": "2.14",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "Cloudflare 발급 결과 표시(진단) + 발급 실패 시 checking 멈춤 방지(직접 연결로 폴백)"
+  "notes": "B도 중계(relay) 강제 지원 — 양쪽 Cloudflare 중계로 영상 확실히 전달"
 }

@@ -36,6 +36,9 @@ class WebRtcHostActivity : AppCompatActivity() {
                 putExtra(WebRtcHostService.EXTRA_TURN_CRED, b.editTurnCred.text.toString().trim())
                 putExtra(WebRtcHostService.EXTRA_CF_KEY, b.editCfKey.text.toString().trim())
                 putExtra(WebRtcHostService.EXTRA_CF_TOKEN, b.editCfToken.text.toString().trim())
+                putExtra(WebRtcHostService.EXTRA_FORCE_RELAY,
+                    if (prefs.has(Prefs.FORCE_RELAY)) prefs.get(Prefs.FORCE_RELAY) == "1"
+                    else b.editCfKey.text.toString().isNotBlank())
                 putExtra(WebRtcHostService.EXTRA_PIN, b.editPin.text.toString().trim())
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(svc)
