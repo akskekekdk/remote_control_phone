@@ -35,7 +35,6 @@
             android:layout_height="wrap_content"
             android:text="같은 와이파이"
             android:textColor="#FFFFFF"
-            android:checked="true"
             android:buttonTint="#4FC3F7"
             android:layout_marginEnd="20dp" />
         <RadioButton
@@ -44,6 +43,7 @@
             android:layout_height="wrap_content"
             android:text="인터넷"
             android:textColor="#FFFFFF"
+            android:checked="true"
             android:buttonTint="#4FC3F7" />
     </RadioGroup>
 

@@ -1,6 +1,6 @@
 {
-  "versionCode": 32,
-  "versionName": "2.21",
+  "versionCode": 33,
+  "versionName": "2.22",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "위젯 누르면 메인 거치지 않고 조종 화면으로 바로 진입(앱 실행 중에도 작동)"
+  "notes": "메인 화면 기본 선택을 '인터넷'으로 변경"
 }

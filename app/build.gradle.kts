@@ -19,8 +19,8 @@ android {
         applicationId = "com.example.remotectl"
         minSdk = 26
         targetSdk = 35
-        versionCode = 32
-        versionName = "2.21"
+        versionCode = 33
+        versionName = "2.22"
 
         // 앱 내 업데이트 확인용 매니페스트 JSON (GitHub raw)
         buildConfigField(
