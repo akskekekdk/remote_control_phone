@@ -274,7 +274,7 @@ class WebRtcClientActivity : AppCompatActivity() {
             try {
                 val stats = report.statsMap
                 var total = 0L
-                var relayed = false
+                var relayCount = 0      // 선택된 경로에서 relay(중계) 후보 개수 (0/1/2)
                 var pairKnown = false
                 for (s in stats.values) {
                     if (s.type != "transport") continue
@@ -283,14 +283,17 @@ class WebRtcClientActivity : AppCompatActivity() {
                     pairKnown = true
                     for (key in listOf("localCandidateId", "remoteCandidateId")) {
                         val cand = stats[pair.members[key] as? String ?: ""] ?: continue
-                        if (cand.members["candidateType"] == "relay") relayed = true
+                        if (cand.members["candidateType"] == "relay") relayCount++
                     }
                 }
                 val delta = total - lastTransportBytes
                 lastTransportBytes = total
-                // 경로를 알 수 없으면 보수적으로 중계로 간주
-                if (delta > 0 && (relayed || !pairKnown)) {
-                    UsageMeter.add(prefs, delta)
+                // Cloudflare 과금은 중계를 거친 횟수만큼 발생.
+                // relay/relay(양쪽 중계)면 약 2배, 한쪽만이면 1배로 보수적으로 집계.
+                val relayed = relayCount > 0 || !pairKnown
+                val factor = if (relayCount >= 2 || !pairKnown) 2 else 1
+                if (delta > 0 && relayed) {
+                    UsageMeter.add(prefs, delta * factor)
                     if (UsageMeter.isOver(prefs)) runOnUiThread { stopForUsageLimit() }
                 }
             } catch (e: Exception) {

@@ -1,6 +1,6 @@
 {
-  "versionCode": 26,
-  "versionName": "2.15",
+  "versionCode": 27,
+  "versionName": "2.16",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "몇초마다 끊김 수정: 신호 재접속 때마다 B가 영상연결을 재생성하던 문제 제거(실제 인증 때만 재생성)"
+  "notes": "사용량 측정 정확도 개선: 중계 2회(relay/relay)면 2배로 집계해 Cloudflare 무료 한도 초과 방지"
 }
