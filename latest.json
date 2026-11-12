@@ -1,6 +1,6 @@
 {
-  "versionCode": 28,
-  "versionName": "2.17",
+  "versionCode": 29,
+  "versionName": "2.18",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "홈 갔다 복귀 시 재연결 안 되던 문제 수정 (백그라운드 종료돼도 자동 재접속)"
+  "notes": "재연결 후 화면 안 뜨던(0x0) 문제 수정 — B가 재접속마다 영상 트랙 새로 생성"
 }

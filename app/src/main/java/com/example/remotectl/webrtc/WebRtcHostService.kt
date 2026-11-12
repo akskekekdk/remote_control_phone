@@ -147,6 +147,10 @@ class WebRtcHostService : Service() {
                 signaling?.sendCandidate(c.sdp, c.sdpMid, c.sdpMLineIndex)
             }
         }) ?: return
+        // 재접속마다 영상 트랙을 새로 만들어 붙인다.
+        // (닫힌 PeerConnection 에 붙었던 트랙을 재사용하면 새 연결에서 프레임이 안 나감 → 0x0)
+        try { videoTrack?.dispose() } catch (_: Exception) {}
+        videoTrack = factory!!.createVideoTrack("screen${System.nanoTime()}", videoSource)
         videoSender = newPc.addTrack(videoTrack, listOf("stream0"))
         applyBitrateCap()
         val dc = newPc.createDataChannel("input", DataChannel.Init())
