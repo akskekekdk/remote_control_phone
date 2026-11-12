@@ -258,7 +258,8 @@ class WebRtcClientActivity : AppCompatActivity() {
                     }
                 }
                 val srv = if (relaySrv.isNotBlank()) " @${relaySrv}" else ""
-                val line = "ICE:$ice  경로:$path$srv\nCF:$cfStatus  ${kbps}kbps ${"%.0f".format(fps)}fps $res\n손실:$loss 끊김:$freeze ${if (path.contains("relay")) "(중계)" else "(직접)"}"
+                val sig = signaling?.connectCount ?: 0
+                val line = "ICE:$ice  경로:$path$srv\nCF:$cfStatus 신호:${sig}회  ${kbps}kbps ${"%.0f".format(fps)}fps $res\n손실:$loss 끊김:$freeze ${if (path.contains("relay")) "(중계)" else "(직접)"}"
                 runOnUiThread { if (debugOn) b.txtDebug.text = line }
             } catch (e: Exception) {
                 runOnUiThread { if (debugOn) b.txtDebug.text = "stats err: ${e.message}" }

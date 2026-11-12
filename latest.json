@@ -1,6 +1,6 @@
 {
-  "versionCode": 25,
-  "versionName": "2.14",
+  "versionCode": 26,
+  "versionName": "2.15",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "B도 중계(relay) 강제 지원 — 양쪽 Cloudflare 중계로 영상 확실히 전달"
+  "notes": "몇초마다 끊김 수정: 신호 재접속 때마다 B가 영상연결을 재생성하던 문제 제거(실제 인증 때만 재생성)"
 }

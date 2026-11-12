@@ -48,6 +48,8 @@ class SignalingClient(
         .build()
 
     @Volatile private var active = true
+    @Volatile var connectCount = 0   // 진단: 신호 (재)접속 횟수
+        private set
     private val scheduler = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
 
     /** 연결이 끊기면 자동으로 다시 붙는다 (서버가 잠들었다 깨어나도 방으로 복귀). */
@@ -60,6 +62,7 @@ class SignalingClient(
 
     fun connect() {
         if (!active) return
+        connectCount++
         val req = Request.Builder().url(url).build()
         ws = http.newWebSocket(req, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {

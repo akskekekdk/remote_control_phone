@@ -211,10 +211,12 @@ class WebRtcHostService : Service() {
         signaling = SignalingClient(url, room, "host", object : SignalingClient.Listener {
             override fun onConnected() { Log.i(TAG, "signaling connected (host)") }
             override fun onPeerJoined() {
-                // A가 (다시) 들어옴 → 새 연결 준비. 그 다음 A의 PIN 인증을 받으면 offer 전송.
-                Log.i(TAG, "client joined")
-                authorized = false
-                createPeerConnection()
+                // 주의: 여기서 PeerConnection 을 재생성하지 않는다.
+                // 신호 WebSocket 이 잠깐 끊겼다 붙어도 peer-joined 가 다시 오는데,
+                // 그때마다 재생성하면 멀쩡히 흐르던 영상이 끊긴다(몇초마다 끊김 원인).
+                // 영상은 신호와 무관하게 relay 로 계속 흐르므로 기존 연결을 유지한다.
+                // 실제 새 연결은 A가 보내는 AUTH 로만 시작한다.
+                Log.i(TAG, "client joined (keep existing media)")
             }
             override fun onPeerLeft() { Log.i(TAG, "client left") }
             override fun onError(message: String) { Log.w(TAG, "signaling error: $message") }
@@ -229,7 +231,8 @@ class WebRtcHostService : Service() {
                     signaling?.sendAuthFail()
                     return
                 }
-                // PIN 통과 후 offer 전송
+                // 실제 새 핸드셰이크 → 이때만 새 PeerConnection 생성 후 offer
+                createPeerConnection()
                 createAndSendOffer()
             }
 
