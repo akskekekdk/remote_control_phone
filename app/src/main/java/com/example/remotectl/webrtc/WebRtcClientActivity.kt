@@ -147,10 +147,32 @@ class WebRtcClientActivity : AppCompatActivity() {
 
         setupTouch()
 
-        // 바로 연결(메인 버튼/위젯에서 진입) — 저장값이 있으면 즉시 접속
+        // 탭하면 입력창 보기(바로연결 화면에서 설정으로)
+        b.txtConnecting.setOnClickListener { showForm() }
+
+        // 바로 연결(메인 버튼/위젯에서 진입) — 저장값이 있으면 입력창 없이 바로 연결
         if (intent?.getBooleanExtra(EXTRA_AUTOCONNECT, false) == true && hasSaved) {
+            showConnecting()
             b.root.post { b.btnConnect.performClick() }
         }
+    }
+
+    /** 입력창 숨기고 "연결 중…" 화면 표시 (바로연결) */
+    private fun showConnecting() {
+        b.overlayConnect.visibility = View.GONE
+        b.txtConnecting.visibility = View.VISIBLE
+        b.txtConnecting.text = "연결 중…"
+    }
+
+    /** 연결중 화면 숨김 (영상 도착) */
+    private fun hideConnecting() {
+        b.txtConnecting.visibility = View.GONE
+    }
+
+    /** 입력창 보이기 (실패/설정 필요) */
+    private fun showForm() {
+        b.txtConnecting.visibility = View.GONE
+        b.overlayConnect.visibility = View.VISIBLE
     }
 
     /** ICE 가 끊기면 delay 후 자동 복구(재연결). 그 전에 다시 연결되면 취소됨. */
@@ -214,7 +236,7 @@ class WebRtcClientActivity : AppCompatActivity() {
         mainHandler.removeCallbacks(recoveryRunnable)
         reconnectOnResume = false
         disconnect()
-        b.overlayConnect.visibility = View.VISIBLE
+        showForm()
         b.txtUsage.text = UsageMeter.label(prefs)
         b.txtStatus.text = "이번 달 중계 사용량 상한(900GB)에 도달해 접속을 멈췄습니다. 다음 달에 다시 쓸 수 있습니다."
     }
@@ -223,6 +245,7 @@ class WebRtcClientActivity : AppCompatActivity() {
         if (factory == null) return
         mainHandler.removeCallbacks(recoveryRunnable)
         if (prefs.has(Prefs.CF_KEY_ID) && UsageMeter.isOver(prefs)) {
+            showForm()
             b.txtUsage.text = UsageMeter.label(prefs)
             b.txtStatus.text = "이번 달 중계 사용량 상한(900GB)에 도달해 접속할 수 없습니다. 다음 달에 다시 쓸 수 있습니다."
             return
@@ -288,6 +311,7 @@ class WebRtcClientActivity : AppCompatActivity() {
                     runOnUiThread {
                         track.addSink(b.renderer)
                         b.overlayConnect.visibility = View.GONE
+                        hideConnecting()
                         b.txtStatus.text = "연결됨"
                     }
                 }
@@ -296,7 +320,7 @@ class WebRtcClientActivity : AppCompatActivity() {
                 val track = transceiver?.receiver?.track()
                 if (track is VideoTrack && remoteTrack == null) {
                     remoteTrack = track
-                    runOnUiThread { track.addSink(b.renderer); b.overlayConnect.visibility = View.GONE }
+                    runOnUiThread { track.addSink(b.renderer); b.overlayConnect.visibility = View.GONE; hideConnecting() }
                 }
             }
             // host 가 만든 입력용 데이터채널 수신 → 이 채널로 입력을 보낸다
@@ -319,7 +343,7 @@ class WebRtcClientActivity : AppCompatActivity() {
             override fun onError(message: String) { runOnUiThread { b.txtStatus.text = "오류: $message" } }
             override fun onAuth(pin: String) {}  // client 는 PIN 을 보내는 쪽
             override fun onAuthFail() {
-                runOnUiThread { b.txtStatus.text = "PIN이 올바르지 않습니다" }
+                runOnUiThread { showForm(); b.txtStatus.text = "PIN이 올바르지 않습니다" }
                 try { signaling?.close() } catch (_: Exception) {}
             }
 
@@ -420,6 +444,7 @@ class WebRtcClientActivity : AppCompatActivity() {
         reconnectOnResume = (b.overlayConnect.visibility == View.GONE)
         disconnect()
         b.overlayConnect.visibility = View.VISIBLE
+        hideConnecting()
         b.txtStatus.text = ""
         b.txtUsage.text = UsageMeter.label(prefs)
         super.onStop()
@@ -429,7 +454,8 @@ class WebRtcClientActivity : AppCompatActivity() {
         super.onResume()
         if (reconnectOnResume && factory != null) {
             reconnectOnResume = false
-            b.btnConnect.performClick() // 저장된 값으로 바로 재접속
+            showConnecting() // 입력창 없이 바로 재접속
+            b.btnConnect.performClick()
         }
     }
 

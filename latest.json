@@ -1,6 +1,6 @@
 {
-  "versionCode": 17,
-  "versionName": "2.6",
+  "versionCode": 18,
+  "versionName": "2.7",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "뚝뚝 끊김 완화: 잠깐 불안정은 기다리고(끊지 않음), 실제 실패만 재연결, TURN 자격증명 캐시로 재연결 가속"
+  "notes": "위젯/바로가기로 들어올 때 저장된 연결이 있으면 입력창 없이 바로 '연결 중' 화면으로"
 }

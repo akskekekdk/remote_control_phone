@@ -38,6 +38,18 @@
         </FrameLayout>
     </LinearLayout>
 
+    <!-- 바로 연결(위젯/바로가기) 시 입력창 대신 보여주는 간단한 연결중 화면. 탭하면 설정창. -->
+    <TextView
+        android:id="@+id/txtConnecting"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#111317"
+        android:gravity="center"
+        android:text="연결 중…"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:visibility="gone" />
+
     <ScrollView
         android:id="@+id/overlayConnect"
         android:layout_width="match_parent"
