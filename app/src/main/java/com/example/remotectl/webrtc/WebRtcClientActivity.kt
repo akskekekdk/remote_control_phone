@@ -43,6 +43,7 @@ class WebRtcClientActivity : AppCompatActivity() {
     private var reconnectOnResume = false
     private var qualityIndex = RtcConfig.DEFAULT_QUALITY_INDEX
     private var lastRecovery = 0L
+    @Volatile private var connecting = false
     private var cachedIce: List<PeerConnection.IceServer>? = null
     private var debugOn = false
     @Volatile private var cfStatus = "미설정"
@@ -169,8 +170,10 @@ class WebRtcClientActivity : AppCompatActivity() {
         // 탭하면 입력창 보기(바로연결 화면에서 설정으로)
         b.txtConnecting.setOnClickListener { showForm() }
 
-        // 바로 연결(메인 버튼/위젯에서 진입) — 저장값이 있으면 입력창 없이 바로 연결
-        if (intent?.getBooleanExtra(EXTRA_AUTOCONNECT, false) == true && hasSaved) {
+        // 바로 연결: 위젯/바로가기로 들어왔거나, 직전에 조종 중이었다면(백그라운드 종료 포함) 자동 연결
+        val autoFromIntent = intent?.getBooleanExtra(EXTRA_AUTOCONNECT, false) == true
+        val wasActive = prefs.get(Prefs.SESSION_ACTIVE) == "1"
+        if (hasSaved && (autoFromIntent || wasActive)) {
             showConnecting()
             b.root.post { b.btnConnect.performClick() }
         }
@@ -306,6 +309,8 @@ class WebRtcClientActivity : AppCompatActivity() {
         if (isFinishing || isDestroyed) return
         mainHandler.removeCallbacks(recoveryRunnable)
         reconnectOnResume = false
+        connecting = false
+        prefs.put(Prefs.SESSION_ACTIVE, "0")
         disconnect()
         showForm()
         b.txtUsage.text = UsageMeter.label(prefs)
@@ -322,6 +327,7 @@ class WebRtcClientActivity : AppCompatActivity() {
             return
         }
         offerSent = false
+        connecting = true
         b.txtStatus.text = "연결 중…"
 
         val cfKey = prefs.get(Prefs.CF_KEY_ID).ifBlank { null }
@@ -392,6 +398,8 @@ class WebRtcClientActivity : AppCompatActivity() {
                 val track = receiver?.track()
                 if (track is VideoTrack) {
                     remoteTrack = track
+                    connecting = false
+                    prefs.put(Prefs.SESSION_ACTIVE, "1")
                     runOnUiThread {
                         track.addSink(b.renderer)
                         b.overlayConnect.visibility = View.GONE
@@ -427,6 +435,8 @@ class WebRtcClientActivity : AppCompatActivity() {
             override fun onError(message: String) { runOnUiThread { b.txtStatus.text = "오류: $message" } }
             override fun onAuth(pin: String) {}  // client 는 PIN 을 보내는 쪽
             override fun onAuthFail() {
+                connecting = false
+                prefs.put(Prefs.SESSION_ACTIVE, "0")
                 runOnUiThread { showForm(); b.txtStatus.text = "PIN이 올바르지 않습니다" }
                 try { signaling?.close() } catch (_: Exception) {}
             }
@@ -521,6 +531,7 @@ class WebRtcClientActivity : AppCompatActivity() {
         try { pc?.close() } catch (_: Exception) {}
         pc = null
         offerSent = false
+        connecting = false
     }
 
     override fun onStop() {
@@ -543,7 +554,7 @@ class WebRtcClientActivity : AppCompatActivity() {
         val ice = pc?.iceConnectionState()
         val healthy = ice == PeerConnection.IceConnectionState.CONNECTED ||
             ice == PeerConnection.IceConnectionState.COMPLETED
-        if (factory != null && (reconnectOnResume || (shouldBeConnected && !healthy))) {
+        if (!connecting && factory != null && (reconnectOnResume || (shouldBeConnected && !healthy))) {
             reconnectOnResume = false
             showConnecting() // 입력창 없이 바로 재접속
             b.btnConnect.performClick()
@@ -551,6 +562,7 @@ class WebRtcClientActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (isFinishing) prefs.put(Prefs.SESSION_ACTIVE, "0") // 사용자가 뒤로가기로 나감
         mainHandler.removeCallbacks(recoveryRunnable)
         mainHandler.removeCallbacks(debugRunnable)
         disconnect()

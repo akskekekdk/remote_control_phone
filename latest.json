@@ -1,6 +1,6 @@
 {
-  "versionCode": 27,
-  "versionName": "2.16",
+  "versionCode": 28,
+  "versionName": "2.17",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "사용량 측정 정확도 개선: 중계 2회(relay/relay)면 2배로 집계해 Cloudflare 무료 한도 초과 방지"
+  "notes": "홈 갔다 복귀 시 재연결 안 되던 문제 수정 (백그라운드 종료돼도 자동 재접속)"
 }

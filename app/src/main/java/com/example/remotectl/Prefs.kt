@@ -33,5 +33,7 @@ class Prefs(context: Context) {
         const val QUALITY_INDEX = "quality_index"
         // 연결 안정 우선: 직접연결 대신 TURN 중계 강제 ("1"=켜짐)
         const val FORCE_RELAY = "force_relay"
+        // 조종 세션 진행 중 표시("1") — 앱이 백그라운드에서 종료돼도 복귀 시 자동 재접속
+        const val SESSION_ACTIVE = "session_active"
     }
 }
