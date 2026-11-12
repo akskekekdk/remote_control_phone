@@ -1,6 +1,6 @@
 {
-  "versionCode": 33,
-  "versionName": "2.22",
+  "versionCode": 34,
+  "versionName": "2.23",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "메인 화면 기본 선택을 '인터넷'으로 변경"
+  "notes": "메인 화면에서 '인터넷'을 왼쪽에 배치하고 기본 선택"
 }
