@@ -10,18 +10,36 @@
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
-        <!-- 왼쪽 세로 버튼 바 -->
+        <!-- 왼쪽 세로 버튼 바 (플랫 아이콘) -->
         <LinearLayout
             android:id="@+id/leftBar"
-            android:layout_width="64dp"
+            android:layout_width="60dp"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:background="#1C1F26"
-            android:gravity="center_horizontal">
-            <Button android:id="@+id/btnRecents" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:text="최근앱" android:textSize="12sp" android:paddingHorizontal="0dp" />
-            <Button android:id="@+id/btnHome" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:text="홈" android:textSize="12sp" android:paddingHorizontal="0dp" />
-            <Button android:id="@+id/btnBack" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:text="뒤로" android:textSize="12sp" android:paddingHorizontal="0dp" />
-            <Button android:id="@+id/btnQuality" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:text="화질\n표준" android:textSize="11sp" android:paddingHorizontal="0dp" />
+            android:background="@drawable/leftbar_bg"
+            android:gravity="center"
+            android:paddingVertical="10dp"
+            android:paddingHorizontal="6dp">
+
+            <LinearLayout android:id="@+id/btnRecents" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_recents" android:contentDescription="최근앱" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="최근" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/btnHome" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_home" android:contentDescription="홈" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="홈" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/btnBack" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_back" android:contentDescription="뒤로" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="뒤로" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/btnQuality" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_quality" android:contentDescription="화질" />
+                <TextView android:id="@+id/txtQualityLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="표준" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
+            </LinearLayout>
         </LinearLayout>
 
         <FrameLayout

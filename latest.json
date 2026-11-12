@@ -1,6 +1,6 @@
 {
-  "versionCode": 19,
-  "versionName": "2.8",
+  "versionCode": 20,
+  "versionName": "2.9",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "조종 화면을 세로(높이)에 꽉 차게 표시 (비율 유지, 상하 여백 제거)"
+  "notes": "왼쪽 버튼 아이콘 기반 깔끔한 디자인 + 화면 세로 꽉 채우기 적용"
 }

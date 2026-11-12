@@ -408,7 +408,7 @@ class WebRtcClientActivity : AppCompatActivity() {
     }
 
     private fun updateQualityButton() {
-        b.btnQuality.text = "화질\n${RtcConfig.QUALITIES[qualityIndex].name}"
+        b.txtQualityLabel.text = RtcConfig.QUALITIES[qualityIndex].name
     }
 
     /** 현재 화질 단계를 B에게 전달 → B가 전송량/프레임레이트 조절 */
