@@ -137,6 +137,10 @@
             <EditText android:id="@+id/editTurnCred" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:hint="TURN 비밀번호" android:textColorHint="#555" android:textColor="#FFFFFF" android:layout_marginBottom="16dp" />
 
+            <CheckBox android:id="@+id/chkForceRelay" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="연결 안정 우선 (중계 강제 · 데이터 더 씀)" android:textColor="#C7CBD1"
+                android:buttonTint="#4FC3F7" android:layout_marginBottom="8dp" />
+
             <Button android:id="@+id/btnQuick" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:text="지난 연결로 바로 접속" android:visibility="gone" android:layout_marginBottom="8dp" />
 

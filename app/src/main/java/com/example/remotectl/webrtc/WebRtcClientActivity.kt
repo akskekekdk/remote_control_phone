@@ -83,6 +83,9 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.editTurnCred.setText(prefs.get(Prefs.NET_TURN_CRED))
         b.editCfKey.setText(prefs.get(Prefs.CF_KEY_ID))
         b.editCfToken.setText(prefs.get(Prefs.CF_TOKEN))
+        val forceDefault = if (prefs.has(Prefs.FORCE_RELAY)) prefs.get(Prefs.FORCE_RELAY) == "1"
+                           else prefs.has(Prefs.CF_KEY_ID)  // Cloudflare 설정돼 있으면 기본 켜짐
+        b.chkForceRelay.isChecked = forceDefault
         b.txtUsage.text = UsageMeter.label(prefs)
 
         val hasSaved = prefs.has(Prefs.NET_URL) && prefs.has(Prefs.NET_CODE) && prefs.has(Prefs.NET_PIN)
@@ -131,6 +134,7 @@ class WebRtcClientActivity : AppCompatActivity() {
             prefs.put(Prefs.NET_TURN_CRED, b.editTurnCred.text.toString().trim())
             prefs.put(Prefs.CF_KEY_ID, b.editCfKey.text.toString().trim())
             prefs.put(Prefs.CF_TOKEN, b.editCfToken.text.toString().trim())
+            prefs.put(Prefs.FORCE_RELAY, if (b.chkForceRelay.isChecked) "1" else "0")
             com.example.remotectl.widget.RemoteWidgetProvider.updateAll(this)
             cachedIce = null // 새로 입력한 값(TURN 등)으로 다시 받도록
             start(url, code)
@@ -341,6 +345,9 @@ class WebRtcClientActivity : AppCompatActivity() {
         val rtcConfig = PeerConnection.RTCConfiguration(ice).apply {
             sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
             continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
+            // 직접 연결이 불안정한 모바일에선 중계(TURN) 강제가 안정적
+            if (prefs.get(Prefs.FORCE_RELAY) == "1")
+                iceTransportsType = PeerConnection.IceTransportsType.RELAY
         }
         pc = factory!!.createPeerConnection(rtcConfig, object : PcObserver() {
             override fun onIceCandidate(c: IceCandidate) {

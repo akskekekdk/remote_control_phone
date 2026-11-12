@@ -31,5 +31,7 @@ class Prefs(context: Context) {
         const val USAGE_BYTES = "usage_bytes"
         // 화질 단계 index
         const val QUALITY_INDEX = "quality_index"
+        // 연결 안정 우선: 직접연결 대신 TURN 중계 강제 ("1"=켜짐)
+        const val FORCE_RELAY = "force_relay"
     }
 }
