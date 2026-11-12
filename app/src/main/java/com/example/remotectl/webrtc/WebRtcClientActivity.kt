@@ -374,9 +374,10 @@ class WebRtcClientActivity : AppCompatActivity() {
         container.post {
             val cw = container.width.toFloat(); val ch = container.height.toFloat()
             if (cw == 0f || ch == 0f || vw == 0 || vh == 0) return@post
-            val scale = minOf(cw / vw, ch / vh)
+            // 세로(높이)에 꽉 차게: 비율 유지, 상하 여백 없음. 좌우는 여백 또는 넘침(크롭) 허용.
+            val scale = ch / vh
             val lp = b.renderer.layoutParams as FrameLayout.LayoutParams
-            lp.width = (vw * scale).toInt(); lp.height = (vh * scale).toInt()
+            lp.width = (vw * scale).toInt(); lp.height = ch.toInt()
             lp.gravity = android.view.Gravity.CENTER
             b.renderer.layoutParams = lp
         }

@@ -1,6 +1,6 @@
 {
-  "versionCode": 18,
-  "versionName": "2.7",
+  "versionCode": 19,
+  "versionName": "2.8",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "위젯/바로가기로 들어올 때 저장된 연결이 있으면 입력창 없이 바로 '연결 중' 화면으로"
+  "notes": "조종 화면을 세로(높이)에 꽉 차게 표시 (비율 유지, 상하 여백 제거)"
 }
