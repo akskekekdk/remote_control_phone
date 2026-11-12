@@ -45,6 +45,8 @@ class WebRtcClientActivity : AppCompatActivity() {
     private var lastRecovery = 0L
     private var cachedIce: List<PeerConnection.IceServer>? = null
     private var debugOn = false
+    @Volatile private var cfStatus = "미설정"
+    @Volatile private var relayAvailable = false
     private var dbgLastBytes = 0L
     private var dbgLastTime = 0L
     private val debugRunnable = object : Runnable {
@@ -256,7 +258,7 @@ class WebRtcClientActivity : AppCompatActivity() {
                     }
                 }
                 val srv = if (relaySrv.isNotBlank()) " @${relaySrv}" else ""
-                val line = "ICE:$ice  경로:$path$srv\n${kbps}kbps ${"%.0f".format(fps)}fps $res\n손실:$loss 끊김:$freeze ${if (path.contains("relay")) "(중계)" else "(직접)"}"
+                val line = "ICE:$ice  경로:$path$srv\nCF:$cfStatus  ${kbps}kbps ${"%.0f".format(fps)}fps $res\n손실:$loss 끊김:$freeze ${if (path.contains("relay")) "(중계)" else "(직접)"}"
                 runOnUiThread { if (debugOn) b.txtDebug.text = line }
             } catch (e: Exception) {
                 runOnUiThread { if (debugOn) b.txtDebug.text = "stats err: ${e.message}" }
@@ -332,6 +334,9 @@ class WebRtcClientActivity : AppCompatActivity() {
         if (cfKey != null) b.txtStatus.text = "TURN 자격증명 받는 중…"
         kotlin.concurrent.thread {
             val ice = RtcConfig.buildIceServers(cfKey, cfToken, turnUrl, turnUser, turnCred)
+            cfStatus = if (cfKey != null) CloudflareTurn.lastResult else "미설정"
+            // 중계(relay) 후보를 쓸 수 있는가: Cloudflare 발급 성공 또는 직접 TURN 입력
+            relayAvailable = cfStatus.startsWith("OK") || turnUrl != null
             if (ice.isNotEmpty()) cachedIce = ice
             runOnUiThread { if (!isFinishing && !isDestroyed) continueConnect(url, code, ice) }
         }
@@ -345,9 +350,16 @@ class WebRtcClientActivity : AppCompatActivity() {
         val rtcConfig = PeerConnection.RTCConfiguration(ice).apply {
             sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
             continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
-            // 직접 연결이 불안정한 모바일에선 중계(TURN) 강제가 안정적
-            if (prefs.get(Prefs.FORCE_RELAY) == "1")
+            // 직접 연결이 불안정한 모바일에선 중계(TURN) 강제가 안정적.
+            // 단, 쓸 수 있는 중계가 있을 때만 강제(없는데 강제하면 영원히 checking).
+            if (prefs.get(Prefs.FORCE_RELAY) == "1" && relayAvailable) {
                 iceTransportsType = PeerConnection.IceTransportsType.RELAY
+            } else if (prefs.get(Prefs.FORCE_RELAY) == "1" && !relayAvailable) {
+                runOnUiThread {
+                    b.txtStatus.text = "중계(Cloudflare) 사용 불가: $cfStatus — 직접 연결로 시도"
+                    toast("Cloudflare TURN 실패: $cfStatus")
+                }
+            }
         }
         pc = factory!!.createPeerConnection(rtcConfig, object : PcObserver() {
             override fun onIceCandidate(c: IceCandidate) {

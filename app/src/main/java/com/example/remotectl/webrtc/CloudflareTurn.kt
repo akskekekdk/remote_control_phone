@@ -28,8 +28,13 @@ object CloudflareTurn {
         .callTimeout(12, TimeUnit.SECONDS)
         .build()
 
+    /** 마지막 발급 결과(진단 표시용): 예 "OK(3)", "HTTP 401", "오류: timeout", "미설정" */
+    @Volatile var lastResult: String = "미설정"
+        private set
+
     /** 동기 호출(백그라운드 스레드에서 사용). 실패 시 null. */
     fun fetchIceServers(keyId: String, token: String): List<PeerConnection.IceServer>? {
+        var lastErr = "알수없음"
         // 공식 엔드포인트(generate-ice-servers) 우선, 안 되면 구 엔드포인트(generate)
         for (path in listOf("generate-ice-servers", "generate")) {
             try {
@@ -42,14 +47,16 @@ object CloudflareTurn {
                     .post(body)
                     .build()
                 val result = http.newCall(req).execute().use { resp ->
-                    if (!resp.isSuccessful) { Log.w(TAG, "$path HTTP ${resp.code}"); null }
+                    if (!resp.isSuccessful) { lastErr = "HTTP ${resp.code}"; Log.w(TAG, "$path $lastErr"); null }
                     else resp.body?.string()?.let { parse(it) }
                 }
-                if (result != null) return result
+                if (result != null) { lastResult = "OK(${result.size})"; return result }
             } catch (e: Exception) {
+                lastErr = "오류: ${e.message}"
                 Log.w(TAG, "$path failed: ${e.message}")
             }
         }
+        lastResult = lastErr
         return null
     }
 

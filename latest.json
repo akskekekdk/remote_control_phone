@@ -1,6 +1,6 @@
 {
-  "versionCode": 23,
-  "versionName": "2.12",
+  "versionCode": 24,
+  "versionName": "2.13",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "끊김 핵심 수정: '연결 안정 우선(중계 강제)' 옵션 — 불안정한 직접연결 대신 Cloudflare 중계를 강제로 사용"
+  "notes": "Cloudflare 발급 결과 표시(진단) + 발급 실패 시 checking 멈춤 방지(직접 연결로 폴백)"
 }
