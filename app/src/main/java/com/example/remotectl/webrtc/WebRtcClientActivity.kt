@@ -179,6 +179,13 @@ class WebRtcClientActivity : AppCompatActivity() {
 
     private var pendingAuto = false
 
+    // 이미 실행 중일 때 위젯을 다시 누르면 → 재접속 예약(onResume 에서 수행)
+    override fun onNewIntent(newIntent: android.content.Intent) {
+        super.onNewIntent(newIntent)
+        setIntent(newIntent)
+        if (newIntent.getBooleanExtra(EXTRA_AUTOCONNECT, false)) pendingAuto = true
+    }
+
     /** 입력창 숨기고 "연결 중…" 화면 표시 (바로연결) */
     private fun showConnecting() {
         b.overlayConnect.visibility = View.GONE

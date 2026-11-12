@@ -1,6 +1,6 @@
 {
-  "versionCode": 31,
-  "versionName": "2.20",
+  "versionCode": 32,
+  "versionName": "2.21",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "업데이트 기능 테스트용 (내용은 v2.19와 동일). 업데이트 → 설치가 되는지 확인용"
+  "notes": "위젯 누르면 메인 거치지 않고 조종 화면으로 바로 진입(앱 실행 중에도 작동)"
 }

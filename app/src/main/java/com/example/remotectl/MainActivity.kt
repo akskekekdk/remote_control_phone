@@ -40,9 +40,22 @@ class MainActivity : AppCompatActivity() {
         b.btnUpdate.setOnClickListener { checkUpdate(manual = true) }
 
         // 위젯에서 진입하면 바로 연결
-        if (intent?.getBooleanExtra(EXTRA_QUICK, false) == true) quickConnect()
+        if (intent?.getBooleanExtra(EXTRA_QUICK, false) == true) {
+            intent.removeExtra(EXTRA_QUICK) // 한 번만
+            quickConnect()
+        }
 
         checkUpdate(manual = false)
+    }
+
+    // 앱이 이미 실행 중일 때 위젯을 누르면 여기로 들어온다
+    override fun onNewIntent(newIntent: Intent) {
+        super.onNewIntent(newIntent)
+        setIntent(newIntent)
+        if (newIntent.getBooleanExtra(EXTRA_QUICK, false) == true) {
+            newIntent.removeExtra(EXTRA_QUICK)
+            quickConnect()
+        }
     }
 
     override fun onResume() {

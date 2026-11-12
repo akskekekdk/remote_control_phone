@@ -9,6 +9,8 @@ import android.widget.RemoteViews
 import com.example.remotectl.MainActivity
 import com.example.remotectl.Prefs
 import com.example.remotectl.R
+import com.example.remotectl.client.ClientActivity
+import com.example.remotectl.webrtc.WebRtcClientActivity
 
 /** 홈 화면 위젯: 탭하면 최근 연결로 바로 접속. */
 class RemoteWidgetProvider : AppWidgetProvider() {
@@ -35,8 +37,16 @@ class RemoteWidgetProvider : AppWidgetProvider() {
                 else -> "설정 필요"
             }
 
-            val intent = Intent(context, MainActivity::class.java).apply {
-                putExtra(MainActivity.EXTRA_QUICK, true)
+            // 최근 연결 방식이면 조종 화면으로 곧장(메인 거치지 않고), 없으면 메인으로.
+            val mode = prefs.get(Prefs.LAST_MODE)
+            val intent = when (mode) {
+                "internet" -> Intent(context, WebRtcClientActivity::class.java)
+                    .putExtra(WebRtcClientActivity.EXTRA_AUTOCONNECT, true)
+                "wifi" -> Intent(context, ClientActivity::class.java)
+                    .putExtra(ClientActivity.EXTRA_AUTOCONNECT, true)
+                else -> Intent(context, MainActivity::class.java)
+                    .putExtra(MainActivity.EXTRA_QUICK, true)
+            }.apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             val pi = PendingIntent.getActivity(
