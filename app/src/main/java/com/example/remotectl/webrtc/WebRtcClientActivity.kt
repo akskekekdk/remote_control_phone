@@ -44,6 +44,12 @@ class WebRtcClientActivity : AppCompatActivity() {
     private var qualityIndex = RtcConfig.DEFAULT_QUALITY_INDEX
     private var lastRecovery = 0L
     private var cachedIce: List<PeerConnection.IceServer>? = null
+    private var debugOn = false
+    private var dbgLastBytes = 0L
+    private var dbgLastTime = 0L
+    private val debugRunnable = object : Runnable {
+        override fun run() { updateDebug(); mainHandler.postDelayed(this, 1500) }
+    }
     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private val recoveryRunnable = Runnable { recoverConnection() }
 
@@ -137,6 +143,13 @@ class WebRtcClientActivity : AppCompatActivity() {
         qualityIndex = (prefs.get(Prefs.QUALITY_INDEX).toIntOrNull()
             ?: RtcConfig.DEFAULT_QUALITY_INDEX).coerceIn(0, RtcConfig.QUALITIES.size - 1)
         updateQualityButton()
+        b.btnQuality.setOnLongClickListener {
+            debugOn = !debugOn
+            b.txtDebug.visibility = if (debugOn) View.VISIBLE else View.GONE
+            if (debugOn) mainHandler.post(debugRunnable) else mainHandler.removeCallbacks(debugRunnable)
+            toast(if (debugOn) "진단 표시 켜짐" else "진단 표시 꺼짐")
+            true
+        }
         b.btnQuality.setOnClickListener {
             qualityIndex = (qualityIndex + 1) % RtcConfig.QUALITIES.size
             prefs.put(Prefs.QUALITY_INDEX, qualityIndex.toString())
@@ -197,6 +210,54 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.txtStatus.text = "재연결 중…"
         disconnect()
         start(url, code)
+    }
+
+    /** 진단: 연결 경로/전송량/fps/끊김을 화면에 표시 */
+    private fun updateDebug() {
+        val p = pc
+        val ice = p?.iceConnectionState()?.name ?: "-"
+        if (p == null) { b.txtDebug.text = "ICE:$ice"; return }
+        p.getStats { report ->
+            try {
+                val stats = report.statsMap
+                var path = "?"; var relaySrv = ""
+                var kbps = 0L; var fps = 0.0; var res = ""; var loss = 0L; var freeze = 0L
+                for (s in stats.values) {
+                    when (s.type) {
+                        "transport" -> {
+                            val pair = stats[s.members["selectedCandidatePairId"] as? String ?: ""]
+                            if (pair != null) {
+                                val lc = stats[pair.members["localCandidateId"] as? String ?: ""]
+                                val rc = stats[pair.members["remoteCandidateId"] as? String ?: ""]
+                                val lt = lc?.members?.get("candidateType") ?: "?"
+                                val rt = rc?.members?.get("candidateType") ?: "?"
+                                path = "$lt/$rt"
+                                val addr = (rc?.members?.get("address") ?: rc?.members?.get("ip") ?: "") as? String ?: ""
+                                relaySrv = addr
+                            }
+                            val tb = (s.members["bytesReceived"] as? Number)?.toLong() ?: 0L
+                            val now = android.os.SystemClock.elapsedRealtime()
+                            if (dbgLastTime > 0 && now > dbgLastTime)
+                                kbps = (tb - dbgLastBytes) * 8 / (now - dbgLastTime)
+                            dbgLastBytes = tb; dbgLastTime = now
+                        }
+                        "inbound-rtp" -> if (s.members["kind"] == "video" || s.members["mediaType"] == "video") {
+                            fps = (s.members["framesPerSecond"] as? Number)?.toDouble() ?: 0.0
+                            val w = (s.members["frameWidth"] as? Number)?.toInt() ?: 0
+                            val h = (s.members["frameHeight"] as? Number)?.toInt() ?: 0
+                            res = "${w}x${h}"
+                            loss = (s.members["packetsLost"] as? Number)?.toLong() ?: 0L
+                            freeze = (s.members["freezeCount"] as? Number)?.toLong() ?: 0L
+                        }
+                    }
+                }
+                val srv = if (relaySrv.isNotBlank()) " @${relaySrv}" else ""
+                val line = "ICE:$ice  경로:$path$srv\n${kbps}kbps ${"%.0f".format(fps)}fps $res\n손실:$loss 끊김:$freeze ${if (path.contains("relay")) "(중계)" else "(직접)"}"
+                runOnUiThread { if (debugOn) b.txtDebug.text = line }
+            } catch (e: Exception) {
+                runOnUiThread { if (debugOn) b.txtDebug.text = "stats err: ${e.message}" }
+            }
+        }
     }
 
     /** 연결 통계에서 받은 바이트를 읽어, TURN 중계 중일 때만 월 사용량에 더한다. */
@@ -468,6 +529,7 @@ class WebRtcClientActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         mainHandler.removeCallbacks(recoveryRunnable)
+        mainHandler.removeCallbacks(debugRunnable)
         disconnect()
         try { b.renderer.release() } catch (_: Exception) {}
         try { factory?.dispose() } catch (_: Exception) {}
