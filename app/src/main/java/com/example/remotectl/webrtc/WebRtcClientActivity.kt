@@ -170,14 +170,14 @@ class WebRtcClientActivity : AppCompatActivity() {
         // 탭하면 입력창 보기(바로연결 화면에서 설정으로)
         b.txtConnecting.setOnClickListener { showForm() }
 
-        // 바로 연결: 위젯/바로가기로 들어왔거나, 직전에 조종 중이었다면(백그라운드 종료 포함) 자동 연결
+        // 바로 연결 여부: 위젯/바로가기로 들어왔거나, 직전에 조종 중이었으면.
+        // 실제 접속은 onResume 에서 한 번만 수행(이중 연결 방지). 여기선 화면만 준비.
         val autoFromIntent = intent?.getBooleanExtra(EXTRA_AUTOCONNECT, false) == true
-        val wasActive = prefs.get(Prefs.SESSION_ACTIVE) == "1"
-        if (hasSaved && (autoFromIntent || wasActive)) {
-            showConnecting()
-            b.root.post { b.btnConnect.performClick() }
-        }
+        pendingAuto = hasSaved && (autoFromIntent || prefs.get(Prefs.SESSION_ACTIVE) == "1")
+        if (pendingAuto) showConnecting()
     }
+
+    private var pendingAuto = false
 
     /** 입력창 숨기고 "연결 중…" 화면 표시 (바로연결) */
     private fun showConnecting() {
@@ -548,17 +548,26 @@ class WebRtcClientActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // 조종 중(영상 화면)이었는데 연결이 살아있지 않으면 재접속.
-        // (홈 눌렀다 복귀 시 onStop 이 안 오고 백그라운드에서 끊겨 화면이 얼어붙는 경우 포함)
-        val shouldBeConnected = b.overlayConnect.visibility == View.GONE
-        val ice = pc?.iceConnectionState()
-        val healthy = ice == PeerConnection.IceConnectionState.CONNECTED ||
-            ice == PeerConnection.IceConnectionState.COMPLETED
-        if (!connecting && factory != null && (reconnectOnResume || (shouldBeConnected && !healthy))) {
+        // 조종 세션 중이었다면(홈 갔다 복귀 포함) 복귀할 때마다 바로 자동 재접속.
+        // 연결이 살아있어 보여도 백그라운드에서 영상이 멈춰있을 수 있어 새로 붙인다.
+        val wasActive = prefs.get(Prefs.SESSION_ACTIVE) == "1"
+        val hasSaved = prefs.has(Prefs.NET_URL) && prefs.has(Prefs.NET_CODE) && prefs.has(Prefs.NET_PIN)
+        if (!connecting && factory != null && hasSaved && (wasActive || pendingAuto)) {
+            pendingAuto = false
             reconnectOnResume = false
-            showConnecting() // 입력창 없이 바로 재접속
-            b.btnConnect.performClick()
+            autoReconnect()
         }
+    }
+
+    /** 저장값으로 빠르게 재접속(자격증명 캐시 재사용). */
+    private fun autoReconnect() {
+        val url = prefs.get(Prefs.NET_URL)
+        val code = prefs.get(Prefs.NET_CODE)
+        pin = prefs.get(Prefs.NET_PIN)
+        if (url.isBlank() || code.isBlank() || pin.isBlank()) return
+        showConnecting()
+        disconnect()
+        start(url, code)   // start() 는 cachedIce 가 있으면 재사용 → 빠름
     }
 
     override fun onDestroy() {

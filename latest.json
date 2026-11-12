@@ -1,6 +1,6 @@
 {
-  "versionCode": 29,
-  "versionName": "2.18",
+  "versionCode": 30,
+  "versionName": "2.19",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "재연결 후 화면 안 뜨던(0x0) 문제 수정 — B가 재접속마다 영상 트랙 새로 생성"
+  "notes": "홈 갔다 복귀 시 수동 재연결 없이 항상 자동으로 바로 재접속"
 }
