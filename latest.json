@@ -1,6 +1,6 @@
 {
-  "versionCode": 35,
-  "versionName": "2.24",
+  "versionCode": 36,
+  "versionName": "2.25",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "왼쪽 바에 볼륨 업/다운 버튼 추가 (B 미디어 볼륨 조절)"
+  "notes": "홈 잠깐 갔다 오면 연결 유지해 바로 보임(재연결 대기 없음). 30초 넘게 나가면만 정리"
 }

@@ -543,28 +543,35 @@ class WebRtcClientActivity : AppCompatActivity() {
         connecting = false
     }
 
-    override fun onStop() {
-        // 앱을 벗어나면 연결을 정리. 조종 중이었다면 돌아왔을 때 자동 재접속.
-        mainHandler.removeCallbacks(recoveryRunnable)
-        reconnectOnResume = (b.overlayConnect.visibility == View.GONE)
+    // 백그라운드에서 일정 시간 지나면 연결 정리(데이터 절약). 잠깐 나갔다 오면 유지.
+    private val bgDisconnectRunnable = Runnable {
         disconnect()
-        b.overlayConnect.visibility = View.VISIBLE
-        hideConnecting()
-        b.txtStatus.text = ""
-        b.txtUsage.text = UsageMeter.label(prefs)
+        reconnectOnResume = true // 다음 복귀 때 재접속 필요
+    }
+
+    override fun onStop() {
+        // 바로 끊지 않는다 → 잠깐 홈 갔다 오면 연결 유지되어 즉시 보임.
+        // 30초 넘게 안 돌아오면 그때 끊어 데이터 절약.
+        mainHandler.removeCallbacks(recoveryRunnable)
+        mainHandler.removeCallbacks(bgDisconnectRunnable)
+        mainHandler.postDelayed(bgDisconnectRunnable, 30_000)
         super.onStop()
     }
 
     override fun onResume() {
         super.onResume()
-        // 조종 세션 중이었다면(홈 갔다 복귀 포함) 복귀할 때마다 바로 자동 재접속.
-        // 연결이 살아있어 보여도 백그라운드에서 영상이 멈춰있을 수 있어 새로 붙인다.
+        mainHandler.removeCallbacks(bgDisconnectRunnable) // 복귀했으니 백그라운드 정리 취소
         val wasActive = prefs.get(Prefs.SESSION_ACTIVE) == "1"
         val hasSaved = prefs.has(Prefs.NET_URL) && prefs.has(Prefs.NET_CODE) && prefs.has(Prefs.NET_PIN)
-        if (!connecting && factory != null && hasSaved && (wasActive || pendingAuto)) {
-            pendingAuto = false
-            reconnectOnResume = false
-            autoReconnect()
+        if (connecting || factory == null || !hasSaved) return
+
+        val ice = pc?.iceConnectionState()
+        val healthy = ice == PeerConnection.IceConnectionState.CONNECTED ||
+            ice == PeerConnection.IceConnectionState.COMPLETED
+        when {
+            pendingAuto -> { pendingAuto = false; reconnectOnResume = false; autoReconnect() }
+            healthy && remoteTrack != null -> { /* 연결 유지됨 → 바로 보임, 아무것도 안 함 */ }
+            wasActive || reconnectOnResume -> { reconnectOnResume = false; autoReconnect() }
         }
     }
 
@@ -583,6 +590,7 @@ class WebRtcClientActivity : AppCompatActivity() {
         if (isFinishing) prefs.put(Prefs.SESSION_ACTIVE, "0") // 사용자가 뒤로가기로 나감
         mainHandler.removeCallbacks(recoveryRunnable)
         mainHandler.removeCallbacks(debugRunnable)
+        mainHandler.removeCallbacks(bgDisconnectRunnable)
         disconnect()
         try { b.renderer.release() } catch (_: Exception) {}
         try { factory?.dispose() } catch (_: Exception) {}
