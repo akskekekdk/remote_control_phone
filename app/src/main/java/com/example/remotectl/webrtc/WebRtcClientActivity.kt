@@ -146,6 +146,8 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.btnBack.setOnClickListener { sendInput(InputCodec.key(0)) }
         b.btnHome.setOnClickListener { sendInput(InputCodec.key(1)) }
         b.btnRecents.setOnClickListener { sendInput(InputCodec.key(2)) }
+        b.btnVolUp.setOnClickListener { sendInput(InputCodec.key(3)) }
+        b.btnVolDown.setOnClickListener { sendInput(InputCodec.key(4)) }
 
         qualityIndex = (prefs.get(Prefs.QUALITY_INDEX).toIntOrNull()
             ?: RtcConfig.DEFAULT_QUALITY_INDEX).coerceIn(0, RtcConfig.QUALITIES.size - 1)

@@ -1,6 +1,6 @@
 {
-  "versionCode": 34,
-  "versionName": "2.23",
+  "versionCode": 35,
+  "versionName": "2.24",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "메인 화면에서 '인터넷'을 왼쪽에 배치하고 기본 선택"
+  "notes": "왼쪽 바에 볼륨 업/다운 버튼 추가 (B 미디어 볼륨 조절)"
 }

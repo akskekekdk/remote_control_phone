@@ -51,6 +51,10 @@ class ControlAccessibilityService : AccessibilityService() {
     }
 
     fun globalKey(keycode: Int) {
+        when (keycode) {
+            3 -> { adjustVolume(raise = true); return }
+            4 -> { adjustVolume(raise = false); return }
+        }
         val action = when (keycode) {
             0 -> GLOBAL_ACTION_BACK
             1 -> GLOBAL_ACTION_HOME
@@ -58,6 +62,20 @@ class ControlAccessibilityService : AccessibilityService() {
             else -> return
         }
         performGlobalAction(action)
+    }
+
+    /** B 미디어(게임) 볼륨 조절 */
+    private fun adjustVolume(raise: Boolean) {
+        try {
+            val am = getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager
+            am.adjustStreamVolume(
+                android.media.AudioManager.STREAM_MUSIC,
+                if (raise) android.media.AudioManager.ADJUST_RAISE else android.media.AudioManager.ADJUST_LOWER,
+                android.media.AudioManager.FLAG_SHOW_UI
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "volume: ${e.message}")
+        }
     }
 
     companion object {

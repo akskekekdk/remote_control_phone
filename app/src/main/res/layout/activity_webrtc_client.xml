@@ -36,6 +36,16 @@
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="뒤로" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
             </LinearLayout>
 
+            <LinearLayout android:id="@+id/btnVolUp" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_vol_up" android:contentDescription="볼륨 업" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="볼륨+" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/btnVolDown" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_vol_down" android:contentDescription="볼륨 다운" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="볼륨−" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
+            </LinearLayout>
+
             <LinearLayout android:id="@+id/btnQuality" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_quality" android:contentDescription="화질" />
                 <TextView android:id="@+id/txtQualityLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="표준" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
