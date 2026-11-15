@@ -1,6 +1,6 @@
 {
-  "versionCode": 36,
-  "versionName": "2.25",
+  "versionCode": 37,
+  "versionName": "2.26",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "홈 잠깐 갔다 오면 연결 유지해 바로 보임(재연결 대기 없음). 30초 넘게 나가면만 정리"
+  "notes": "네트워크 자동 감지(같은 와이파이=직접, LTE=중계)로 멈춤 완화. 뒤로 버튼 맨 아래 + 바 넓게"
 }

@@ -86,9 +86,8 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.editTurnCred.setText(prefs.get(Prefs.NET_TURN_CRED))
         b.editCfKey.setText(prefs.get(Prefs.CF_KEY_ID))
         b.editCfToken.setText(prefs.get(Prefs.CF_TOKEN))
-        val forceDefault = if (prefs.has(Prefs.FORCE_RELAY)) prefs.get(Prefs.FORCE_RELAY) == "1"
-                           else prefs.has(Prefs.CF_KEY_ID)  // Cloudflare 설정돼 있으면 기본 켜짐
-        b.chkForceRelay.isChecked = forceDefault
+        // 기본은 '자동'(체크 해제): 같은 와이파이면 직접, LTE면 중계. 체크하면 항상 중계.
+        b.chkForceRelay.isChecked = prefs.get(Prefs.FORCE_RELAY) == "1"
         b.txtUsage.text = UsageMeter.label(prefs)
 
         val hasSaved = prefs.has(Prefs.NET_URL) && prefs.has(Prefs.NET_CODE) && prefs.has(Prefs.NET_PIN)
@@ -180,6 +179,7 @@ class WebRtcClientActivity : AppCompatActivity() {
     }
 
     private var pendingAuto = false
+    private var relayMode = false
 
     // 이미 실행 중일 때 위젯을 다시 누르면 → 재접속 예약(onResume 에서 수행)
     override fun onNewIntent(newIntent: android.content.Intent) {
@@ -326,6 +326,16 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.txtStatus.text = "이번 달 중계 사용량 상한(900GB)에 도달해 접속을 멈췄습니다. 다음 달에 다시 쓸 수 있습니다."
     }
 
+    /** A가 셀룰러(LTE/5G)에 있나? → 그러면 중계 필요. 와이파이면 직접 연결 선호. */
+    private fun isCellular(): Boolean {
+        return try {
+            val cm = getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+            val nc = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
+            nc.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR) &&
+                !nc.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)
+        } catch (e: Exception) { false }
+    }
+
     private fun start(url: String, code: String) {
         if (factory == null) return
         mainHandler.removeCallbacks(recoveryRunnable)
@@ -369,15 +379,14 @@ class WebRtcClientActivity : AppCompatActivity() {
         val rtcConfig = PeerConnection.RTCConfiguration(ice).apply {
             sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
             continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
-            // 직접 연결이 불안정한 모바일에선 중계(TURN) 강제가 안정적.
-            // 단, 쓸 수 있는 중계가 있을 때만 강제(없는데 강제하면 영원히 checking).
-            if (prefs.get(Prefs.FORCE_RELAY) == "1" && relayAvailable) {
+            // 자동: 같은 와이파이(셀룰러 아님)면 직접 연결(ALL), LTE면 중계(RELAY).
+            // 사용자가 '중계 강제'를 켜면 항상 중계.
+            val wantRelay = b.chkForceRelay.isChecked || isCellular()
+            relayMode = wantRelay && relayAvailable
+            if (relayMode) {
                 iceTransportsType = PeerConnection.IceTransportsType.RELAY
-            } else if (prefs.get(Prefs.FORCE_RELAY) == "1" && !relayAvailable) {
-                runOnUiThread {
-                    b.txtStatus.text = "중계(Cloudflare) 사용 불가: $cfStatus — 직접 연결로 시도"
-                    toast("Cloudflare TURN 실패: $cfStatus")
-                }
+            } else if (wantRelay && !relayAvailable) {
+                runOnUiThread { toast("Cloudflare TURN 실패: $cfStatus — 직접 연결로 시도") }
             }
         }
         pc = factory!!.createPeerConnection(rtcConfig, object : PcObserver() {
@@ -434,7 +443,7 @@ class WebRtcClientActivity : AppCompatActivity() {
             override fun onConnected() { runOnUiThread { b.txtStatus.text = "서버 연결됨, 상대 대기…" } }
             override fun onPeerJoined() {
                 // 상대(host)가 있으면 PIN 전송 → host 가 검증 후 offer 를 보냄
-                if (!offerSent) { offerSent = true; signaling?.sendAuth(pin) }
+                if (!offerSent) { offerSent = true; signaling?.sendAuth(pin, relayMode) }
             }
             override fun onPeerLeft() {
                 offerSent = false // 상대(B)가 돌아오면 다시 인증하도록
@@ -442,7 +451,7 @@ class WebRtcClientActivity : AppCompatActivity() {
             }
             override fun onClosed() {}
             override fun onError(message: String) { runOnUiThread { b.txtStatus.text = "오류: $message" } }
-            override fun onAuth(pin: String) {}  // client 는 PIN 을 보내는 쪽
+            override fun onAuth(pin: String, relay: Boolean) {}  // client 는 PIN 을 보내는 쪽
             override fun onAuthFail() {
                 connecting = false
                 prefs.put(Prefs.SESSION_ACTIVE, "0")

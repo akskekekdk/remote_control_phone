@@ -13,13 +13,13 @@
         <!-- 왼쪽 세로 버튼 바 (플랫 아이콘) -->
         <LinearLayout
             android:id="@+id/leftBar"
-            android:layout_width="60dp"
+            android:layout_width="76dp"
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:background="@drawable/leftbar_bg"
             android:gravity="center"
             android:paddingVertical="10dp"
-            android:paddingHorizontal="6dp">
+            android:paddingHorizontal="8dp">
 
             <LinearLayout android:id="@+id/btnRecents" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_recents" android:contentDescription="최근앱" />
@@ -29,11 +29,6 @@
             <LinearLayout android:id="@+id/btnHome" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_home" android:contentDescription="홈" />
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="홈" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
-            </LinearLayout>
-
-            <LinearLayout android:id="@+id/btnBack" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
-                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_back" android:contentDescription="뒤로" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="뒤로" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
             </LinearLayout>
 
             <LinearLayout android:id="@+id/btnVolUp" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
@@ -49,6 +44,11 @@
             <LinearLayout android:id="@+id/btnQuality" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_quality" android:contentDescription="화질" />
                 <TextView android:id="@+id/txtQualityLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="표준" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/btnBack" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_back" android:contentDescription="뒤로" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="뒤로" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -72,7 +72,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|start"
-        android:layout_marginStart="68dp"
+        android:layout_marginStart="84dp"
         android:layout_marginTop="4dp"
         android:background="#AA000000"
         android:padding="6dp"
@@ -148,7 +148,7 @@
                 android:hint="TURN 비밀번호" android:textColorHint="#555" android:textColor="#FFFFFF" android:layout_marginBottom="16dp" />
 
             <CheckBox android:id="@+id/chkForceRelay" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:text="연결 안정 우선 (중계 강제 · 데이터 더 씀)" android:textColor="#C7CBD1"
+                android:text="항상 중계 강제 (기본: 자동 — 같은 망 직접, LTE 중계)" android:textColor="#C7CBD1"
                 android:buttonTint="#4FC3F7" android:layout_marginBottom="8dp" />
 
             <Button android:id="@+id/btnQuick" android:layout_width="match_parent" android:layout_height="wrap_content"

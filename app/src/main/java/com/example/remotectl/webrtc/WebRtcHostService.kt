@@ -228,13 +228,15 @@ class WebRtcHostService : Service() {
             override fun onOffer(sdp: String) {}   // host 가 offer 를 만드는 쪽
             override fun onAuthFail() {}            // host 는 PIN 을 검증하는 쪽
 
-            override fun onAuth(clientPin: String) {
+            override fun onAuth(clientPin: String, relay: Boolean) {
                 authorized = (clientPin == pin)
                 if (!authorized) {
                     Log.w(TAG, "auth failed: wrong PIN")
                     signaling?.sendAuthFail()
                     return
                 }
+                // A가 정한 중계 사용 여부에 맞춘다(같은 망이면 직접, 떨어지면 중계)
+                forceRelay = relay
                 // 실제 새 핸드셰이크 → 이때만 새 PeerConnection 생성 후 offer
                 createPeerConnection()
                 createAndSendOffer()
