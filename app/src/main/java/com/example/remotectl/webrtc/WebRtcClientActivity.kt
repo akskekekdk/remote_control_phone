@@ -401,14 +401,13 @@ class WebRtcClientActivity : AppCompatActivity() {
                         runOnUiThread { if (remoteTrack != null) b.txtStatus.text = "영상 수신 중" }
                     }
                     PeerConnection.IceConnectionState.DISCONNECTED -> {
-                        // 모바일에선 잠깐 불안정했다가 스스로 복구되는 일이 흔하다.
-                        // 끊지 말고 기다리되, 15초 넘게 안 돌아오면 그때 재연결.
+                        // 잠깐 불안정이면 스스로 복구되므로 4초 기다렸다 안 돌아오면 재연결(멈춤 시간 단축)
                         runOnUiThread { b.txtStatus.text = "연결 불안정…" }
-                        scheduleRecovery(15000)
+                        scheduleRecovery(4000)
                     }
                     PeerConnection.IceConnectionState.FAILED,
                     PeerConnection.IceConnectionState.CLOSED ->
-                        scheduleRecovery(2500) // 실패 — 재연결
+                        scheduleRecovery(1500) // 실패 — 빠르게 재연결
                     else -> {}
                 }
             }

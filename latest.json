@@ -1,6 +1,6 @@
 {
-  "versionCode": 37,
-  "versionName": "2.26",
+  "versionCode": 38,
+  "versionName": "2.27",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "네트워크 자동 감지(같은 와이파이=직접, LTE=중계)로 멈춤 완화. 뒤로 버튼 맨 아래 + 바 넓게"
+  "notes": "20초마다 끊기던 문제 수정: 신호 핑 오탐 제거(서버 heartbeat 사용) + 끊김 복구 빠르게"
 }
