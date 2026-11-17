@@ -74,6 +74,13 @@ class WebRtcClientActivity : AppCompatActivity() {
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(b.contentRoot) { v, insets ->
             val bars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
             v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            // 재연결 버튼이 상태바에 가리지 않게 상단/우측 여백을 인셋만큼 내림
+            val d = resources.displayMetrics.density
+            (b.btnReconnect.layoutParams as? android.widget.FrameLayout.LayoutParams)?.let { lp ->
+                lp.topMargin = bars.top + (6 * d).toInt()
+                lp.marginEnd = bars.right + (10 * d).toInt()
+                b.btnReconnect.layoutParams = lp
+            }
             insets
         }
 
