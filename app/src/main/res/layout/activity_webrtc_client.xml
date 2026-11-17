@@ -66,6 +66,24 @@
         </FrameLayout>
     </LinearLayout>
 
+    <!-- 재연결 버튼 (오른쪽 위, 왼쪽 바와 다른 위치) -->
+    <TextView
+        android:id="@+id/btnReconnect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/navbtn_bg"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:text="↻ 재연결"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:clickable="true"
+        android:focusable="true" />
+
     <!-- 진단 정보 (화질 아이콘 길게 누르면 켜짐) -->
     <TextView
         android:id="@+id/txtDebug"

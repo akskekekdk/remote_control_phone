@@ -147,6 +147,11 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.btnRecents.setOnClickListener { sendInput(InputCodec.key(2)) }
         b.btnVolUp.setOnClickListener { sendInput(InputCodec.key(3)) }
         b.btnVolDown.setOnClickListener { sendInput(InputCodec.key(4)) }
+        b.btnReconnect.setOnClickListener {
+            if (prefs.has(Prefs.NET_URL) && prefs.has(Prefs.NET_CODE) && prefs.has(Prefs.NET_PIN)) {
+                toast("재연결 중…"); autoReconnect()
+            }
+        }
 
         qualityIndex = (prefs.get(Prefs.QUALITY_INDEX).toIntOrNull()
             ?: RtcConfig.DEFAULT_QUALITY_INDEX).coerceIn(0, RtcConfig.QUALITIES.size - 1)

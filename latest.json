@@ -1,6 +1,6 @@
 {
-  "versionCode": 38,
-  "versionName": "2.27",
+  "versionCode": 39,
+  "versionName": "2.28",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "20초마다 끊기던 문제 수정: 신호 핑 오탐 제거(서버 heartbeat 사용) + 끊김 복구 빠르게"
+  "notes": "오른쪽 위에 '재연결' 버튼 추가 (멈췄을 때 수동 재연결)"
 }
