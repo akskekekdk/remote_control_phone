@@ -98,7 +98,7 @@ class WebRtcClientActivity : AppCompatActivity() {
         eglBase = EglBase.create()
         b.renderer.init(eglBase.eglBaseContext, object : RendererCommon.RendererEvents {
             override fun onFirstFrameRendered() {
-                runOnUiThread { b.txtStatus.text = "영상 수신 중" }
+                setStatus("영상 수신 중")
                 // 데이터채널이 열렸으니 현재 화질 설정을 B에 반영
                 mainHandler.postDelayed({ sendQuality() }, 500)
             }
@@ -352,7 +352,9 @@ class WebRtcClientActivity : AppCompatActivity() {
         }
         offerSent = false
         connecting = true
-        b.txtStatus.text = "연결 중…"
+        mainHandler.removeCallbacks(connectTimeout)
+        mainHandler.postDelayed(connectTimeout, 30_000)
+        setStatus("연결 중…")
 
         val cfKey = prefs.get(Prefs.CF_KEY_ID).ifBlank { null }
         val cfToken = prefs.get(Prefs.CF_TOKEN).ifBlank { null }
@@ -365,7 +367,7 @@ class WebRtcClientActivity : AppCompatActivity() {
             continueConnect(url, code, reuse)
             return
         }
-        if (cfKey != null) b.txtStatus.text = "TURN 자격증명 받는 중…"
+        if (cfKey != null) setStatus("TURN 자격증명 받는 중…")
         kotlin.concurrent.thread {
             val ice = RtcConfig.buildIceServers(cfKey, cfToken, turnUrl, turnUser, turnCred)
             cfStatus = if (cfKey != null) CloudflareTurn.lastResult else "미설정"
@@ -421,6 +423,7 @@ class WebRtcClientActivity : AppCompatActivity() {
                 if (track is VideoTrack) {
                     remoteTrack = track
                     connecting = false
+                    mainHandler.removeCallbacks(connectTimeout)
                     prefs.put(Prefs.SESSION_ACTIVE, "1")
                     runOnUiThread {
                         track.addSink(b.renderer)
@@ -444,17 +447,17 @@ class WebRtcClientActivity : AppCompatActivity() {
         })
 
         signaling = SignalingClient(url, code, "client", object : SignalingClient.Listener {
-            override fun onConnected() { runOnUiThread { b.txtStatus.text = "서버 연결됨, 상대 대기…" } }
+            override fun onConnected() { setStatus("서버 연결됨, 상대 대기…") }
             override fun onPeerJoined() {
                 // 상대(host)가 있으면 PIN 전송 → host 가 검증 후 offer 를 보냄
                 if (!offerSent) { offerSent = true; signaling?.sendAuth(pin, relayMode) }
             }
             override fun onPeerLeft() {
                 offerSent = false // 상대(B)가 돌아오면 다시 인증하도록
-                runOnUiThread { b.txtStatus.text = "상대 대기…" }
+                setStatus("상대 대기…")
             }
             override fun onClosed() {}
-            override fun onError(message: String) { runOnUiThread { b.txtStatus.text = "오류: $message" } }
+            override fun onError(message: String) { setStatus("오류: $message") }
             override fun onAuth(pin: String, relay: Boolean) {}  // client 는 PIN 을 보내는 쪽
             override fun onAuthFail() {
                 connecting = false
@@ -544,6 +547,7 @@ class WebRtcClientActivity : AppCompatActivity() {
     /** 연결만 끊는다(팩토리/렌더러는 유지). 돌아오면 '바로 접속'으로 재연결. */
     private fun disconnect() {
         mainHandler.removeCallbacks(statsRunnable)
+        mainHandler.removeCallbacks(connectTimeout)
         try { remoteTrack?.removeSink(b.renderer) } catch (_: Exception) {}
         remoteTrack = null
         try { signaling?.close() } catch (_: Exception) {}
@@ -585,6 +589,22 @@ class WebRtcClientActivity : AppCompatActivity() {
             pendingAuto -> { pendingAuto = false; reconnectOnResume = false; autoReconnect() }
             healthy && remoteTrack != null -> { /* 연결 유지됨 → 바로 보임, 아무것도 안 함 */ }
             wasActive || reconnectOnResume -> { reconnectOnResume = false; autoReconnect() }
+        }
+    }
+
+    /** 상태 문구를 txtStatus 와(연결중 화면이면) txtConnecting 양쪽에 표시 */
+    private fun setStatus(s: String) {
+        runOnUiThread {
+            b.txtStatus.text = s
+            if (b.txtConnecting.visibility == View.VISIBLE) b.txtConnecting.text = s
+        }
+    }
+
+    // 너무 오래 연결 안 되면 입력창으로(무한 "연결 중…" 방지)
+    private val connectTimeout = Runnable {
+        if (remoteTrack == null && !isFinishing && !isDestroyed) {
+            showForm()
+            b.txtStatus.text = "연결이 지연됩니다. 다시 시도하거나 설정을 확인하세요."
         }
     }
 

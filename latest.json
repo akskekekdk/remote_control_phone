@@ -1,6 +1,6 @@
 {
-  "versionCode": 39,
-  "versionName": "2.28",
+  "versionCode": 40,
+  "versionName": "2.29",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "오른쪽 위에 '재연결' 버튼 추가 (멈췄을 때 수동 재연결)"
+  "notes": "연결 멈춤 방지: 신호 핑 복원(40s), 연결 중 화면에 실제 단계 표시, 30초 지연 시 입력창으로"
 }

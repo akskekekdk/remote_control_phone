@@ -43,9 +43,9 @@ class SignalingClient(
 
     private var ws: WebSocket? = null
     private val http = OkHttpClient.Builder()
-        // 클라이언트 핑은 끔(LTE 에서 20초마다 오탐으로 끊기던 원인). 서버 heartbeat 가 살아있음을 확인.
+        // 죽은 연결 감지를 위해 핑은 유지하되 간격을 넉넉히(40s) → LTE 에서 오탐 줄임
+        .pingInterval(40, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
-        .readTimeout(0, TimeUnit.MILLISECONDS)
         .build()
 
     @Volatile private var active = true
