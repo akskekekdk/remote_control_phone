@@ -20,13 +20,14 @@ object RtcConfig {
 
     // 화질 단계 (조종 화면에서 버튼으로 전환). 낮을수록 데이터 절약, 높을수록 선명·빠름.
     data class Quality(val name: String, val bitrate: Int, val fps: Int)
+    // fps 는 B 캡처(40fps)를 넘지 않게 맞춤 → B폰 발열/부하를 적정선으로.
     val QUALITIES = listOf(
         Quality("데이터절약", 800_000, 24),
         Quality("표준", 2_500_000, 30),
-        Quality("고속", 6_000_000, 60),
-        Quality("초고속", 12_000_000, 60),
+        Quality("고속", 5_000_000, 40),
+        Quality("초고속", 9_000_000, 40),
     )
-    // 기본값: 빠르고 부드럽게 (데이터 사용량 많아도 OK)
+    // 기본값: 균형(B폰이 오래 버티면서도 부드러움)
     const val DEFAULT_QUALITY_INDEX = 2
 
     // 공개 STUN (무료).

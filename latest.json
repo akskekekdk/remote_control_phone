@@ -1,6 +1,6 @@
 {
-  "versionCode": 42,
-  "versionName": "2.31",
+  "versionCode": 43,
+  "versionName": "2.32",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "LTE 끊김(relay/relay 0kbps) 수정: 영상 중계를 TCP로 전송. 화질·속도 대폭 상향(기본 고속 6Mbps/60fps, 최고 초고속 12Mbps). 끊길 때 프레임 유지."
+  "notes": "B폰 부하 완화(1280px/40fps)로 게임이 더 오래 버티게 균형 조정. LTE 끊김은 TCP 중계로 계속 안정. 기본 고속 5Mbps/40fps, 최고 초고속 9Mbps."
 }

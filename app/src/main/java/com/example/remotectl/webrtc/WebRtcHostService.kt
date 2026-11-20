@@ -105,7 +105,7 @@ class WebRtcHostService : Service() {
         wm.defaultDisplay.getRealMetrics(m)
         realW = m.widthPixels.toFloat()
         realH = m.heightPixels.toFloat()
-        val maxDim = 1600
+        val maxDim = 1280
         val scale = minOf(1f, maxDim.toFloat() / maxOf(m.widthPixels, m.heightPixels))
         encW = (m.widthPixels * scale).toInt() / 2 * 2
         encH = (m.heightPixels * scale).toInt() / 2 * 2
@@ -133,7 +133,7 @@ class WebRtcHostService : Service() {
         helper = SurfaceTextureHelper.create("CaptureThread", eglBase.eglBaseContext)
         videoSource = factory!!.createVideoSource(true /* isScreencast */)
         capturer!!.initialize(helper, applicationContext, videoSource!!.capturerObserver)
-        capturer!!.startCapture(encW, encH, 60)
+        capturer!!.startCapture(encW, encH, 40)
         videoTrack = factory!!.createVideoTrack("screen0", videoSource)
     }
 
