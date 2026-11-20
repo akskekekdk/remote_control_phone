@@ -75,7 +75,8 @@ class WebRtcHostService : Service() {
         // ICE 서버는 네트워크(Cloudflare 발급)일 수 있어 백그라운드에서 준비 후 시작
         val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
         Thread({
-            val ice = RtcConfig.buildIceServers(cfKey, cfToken, turnUrl, turnUser, turnCred)
+            // 이 폰이 LTE/5G 면 TURN 을 TCP/TLS 로 (UDP 중계가 모바일에서 끊김)
+            val ice = RtcConfig.buildIceServers(cfKey, cfToken, turnUrl, turnUser, turnCred, isCellular())
             // 중계 가능 여부: Cloudflare 발급 성공 또는 직접 TURN 입력
             relayAvailable = (!cfKey.isNullOrBlank() && CloudflareTurn.lastResult.startsWith("OK")) ||
                 !turnUrl.isNullOrBlank()
@@ -87,6 +88,16 @@ class WebRtcHostService : Service() {
         return START_STICKY
     }
 
+    /** 이 폰이 셀룰러(LTE/5G)에 있나? → TURN 을 TCP 로 쓰면 중계가 안정적. */
+    private fun isCellular(): Boolean {
+        return try {
+            val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+            val nc = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
+            nc.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR) &&
+                !nc.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)
+        } catch (e: Exception) { false }
+    }
+
     private fun computeResolution() {
         val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val m = DisplayMetrics()
@@ -94,7 +105,7 @@ class WebRtcHostService : Service() {
         wm.defaultDisplay.getRealMetrics(m)
         realW = m.widthPixels.toFloat()
         realH = m.heightPixels.toFloat()
-        val maxDim = 1280
+        val maxDim = 1600
         val scale = minOf(1f, maxDim.toFloat() / maxOf(m.widthPixels, m.heightPixels))
         encW = (m.widthPixels * scale).toInt() / 2 * 2
         encH = (m.heightPixels * scale).toInt() / 2 * 2
@@ -122,7 +133,7 @@ class WebRtcHostService : Service() {
         helper = SurfaceTextureHelper.create("CaptureThread", eglBase.eglBaseContext)
         videoSource = factory!!.createVideoSource(true /* isScreencast */)
         capturer!!.initialize(helper, applicationContext, videoSource!!.capturerObserver)
-        capturer!!.startCapture(encW, encH, 30)
+        capturer!!.startCapture(encW, encH, 60)
         videoTrack = factory!!.createVideoTrack("screen0", videoSource)
     }
 
@@ -189,9 +200,12 @@ class WebRtcHostService : Service() {
         try {
             val p = s.parameters
             if (p.encodings.isEmpty()) return
+            // 끊길 때 프레임을 유지(해상도만 낮춤) → 조작·게임에서 반응이 가장 부드럽다.
+            try { p.degradationPreference = org.webrtc.RtpParameters.DegradationPreference.MAINTAIN_FRAMERATE } catch (_: Exception) {}
             p.encodings.forEach {
                 it.maxBitrateBps = curBitrate
                 it.maxFramerate = curFps
+                it.minBitrateBps = curBitrate / 2   // 바닥을 올려 번지는 화면 방지
             }
             s.parameters = p
         } catch (e: Exception) {

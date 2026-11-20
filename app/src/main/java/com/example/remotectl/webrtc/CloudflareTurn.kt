@@ -32,8 +32,11 @@ object CloudflareTurn {
     @Volatile var lastResult: String = "미설정"
         private set
 
-    /** 동기 호출(백그라운드 스레드에서 사용). 실패 시 null. */
-    fun fetchIceServers(keyId: String, token: String): List<PeerConnection.IceServer>? {
+    /**
+     * 동기 호출(백그라운드 스레드에서 사용). 실패 시 null.
+     * tcpOnly=true 면 TURN 후보를 TCP/TLS 만 남긴다(LTE 에서 UDP 중계가 끊길 때 안정적).
+     */
+    fun fetchIceServers(keyId: String, token: String, tcpOnly: Boolean = false): List<PeerConnection.IceServer>? {
         var lastErr = "알수없음"
         // 공식 엔드포인트(generate-ice-servers) 우선, 안 되면 구 엔드포인트(generate)
         for (path in listOf("generate-ice-servers", "generate")) {
@@ -48,7 +51,7 @@ object CloudflareTurn {
                     .build()
                 val result = http.newCall(req).execute().use { resp ->
                     if (!resp.isSuccessful) { lastErr = "HTTP ${resp.code}"; Log.w(TAG, "$path $lastErr"); null }
-                    else resp.body?.string()?.let { parse(it) }
+                    else resp.body?.string()?.let { parse(it, tcpOnly) }
                 }
                 if (result != null) { lastResult = "OK(${result.size})"; return result }
             } catch (e: Exception) {
@@ -61,7 +64,7 @@ object CloudflareTurn {
     }
 
     /** iceServers 가 배열([{urls,username,credential}, ...])이든 단일 객체든 처리 */
-    private fun parse(json: String): List<PeerConnection.IceServer>? {
+    private fun parse(json: String, tcpOnly: Boolean = false): List<PeerConnection.IceServer>? {
         val root = JSONObject(json)
         val entries = ArrayList<JSONObject>()
         val arr = root.optJSONArray("iceServers")
@@ -84,7 +87,12 @@ object CloudflareTurn {
             }
             // STUN(인증 불필요)과 TURN(인증 필요)을 분리해서 등록
             val stun = urls.filter { it.startsWith("stun:") }
-            val turn = urls.filter { it.startsWith("turn:") || it.startsWith("turns:") }
+            var turn = urls.filter { it.startsWith("turn:") || it.startsWith("turns:") }
+            if (tcpOnly) {
+                // TCP/TLS 중계만 남긴다 (turns: 는 TLS=TCP, turn:...transport=tcp)
+                val tcp = turn.filter { it.startsWith("turns:") || it.contains("transport=tcp") }
+                if (tcp.isNotEmpty()) turn = tcp
+            }
             if (stun.isNotEmpty()) list.add(PeerConnection.IceServer.builder(stun).createIceServer())
             if (turn.isNotEmpty()) {
                 list.add(

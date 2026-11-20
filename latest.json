@@ -1,6 +1,6 @@
 {
-  "versionCode": 41,
-  "versionName": "2.30",
+  "versionCode": 42,
+  "versionName": "2.31",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "재연결 버튼이 상태바에 가려지던 문제 수정(상태바 아래로 내림)"
+  "notes": "LTE 끊김(relay/relay 0kbps) 수정: 영상 중계를 TCP로 전송. 화질·속도 대폭 상향(기본 고속 6Mbps/60fps, 최고 초고속 12Mbps). 끊길 때 프레임 유지."
 }

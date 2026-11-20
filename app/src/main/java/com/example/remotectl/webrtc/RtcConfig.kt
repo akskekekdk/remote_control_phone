@@ -18,14 +18,16 @@ object RtcConfig {
     // 영상 전송량 상한(약 1Mbps). 24시간 중계해도 월 약 330GB 수준으로 묶는다.
     const val MAX_VIDEO_BITRATE_BPS = 1_000_000
 
-    // 화질 단계 (조종 화면에서 버튼으로 전환). 낮을수록 데이터 절약, 높을수록 선명.
+    // 화질 단계 (조종 화면에서 버튼으로 전환). 낮을수록 데이터 절약, 높을수록 선명·빠름.
     data class Quality(val name: String, val bitrate: Int, val fps: Int)
     val QUALITIES = listOf(
-        Quality("데이터절약", 500_000, 20),
-        Quality("표준", 1_000_000, 30),
-        Quality("고화질", 2_500_000, 40),
+        Quality("데이터절약", 800_000, 24),
+        Quality("표준", 2_500_000, 30),
+        Quality("고속", 6_000_000, 60),
+        Quality("초고속", 12_000_000, 60),
     )
-    const val DEFAULT_QUALITY_INDEX = 1
+    // 기본값: 빠르고 부드럽게 (데이터 사용량 많아도 OK)
+    const val DEFAULT_QUALITY_INDEX = 2
 
     // 공개 STUN (무료).
     private val STUN = listOf(
@@ -54,9 +56,10 @@ object RtcConfig {
     fun buildIceServers(
         cfKeyId: String?, cfToken: String?,
         turnUrl: String?, turnUser: String?, turnCred: String?,
+        tcpOnly: Boolean = false,
     ): List<PeerConnection.IceServer> {
         if (!cfKeyId.isNullOrBlank() && !cfToken.isNullOrBlank()) {
-            val cf = CloudflareTurn.fetchIceServers(cfKeyId, cfToken)
+            val cf = CloudflareTurn.fetchIceServers(cfKeyId, cfToken, tcpOnly)
             if (cf != null) {
                 // Cloudflare 결과 + 백업 STUN
                 val list = ArrayList<PeerConnection.IceServer>()

@@ -376,7 +376,9 @@ class WebRtcClientActivity : AppCompatActivity() {
         }
         if (cfKey != null) setStatus("TURN 자격증명 받는 중…")
         kotlin.concurrent.thread {
-            val ice = RtcConfig.buildIceServers(cfKey, cfToken, turnUrl, turnUser, turnCred)
+            // LTE/5G 또는 '중계 강제' 일 때는 TURN 을 TCP/TLS 로 (UDP 중계가 LTE 에서 끊김)
+            val tcpRelay = b.chkForceRelay.isChecked || isCellular()
+            val ice = RtcConfig.buildIceServers(cfKey, cfToken, turnUrl, turnUser, turnCred, tcpRelay)
             cfStatus = if (cfKey != null) CloudflareTurn.lastResult else "미설정"
             // 중계(relay) 후보를 쓸 수 있는가: Cloudflare 발급 성공 또는 직접 TURN 입력
             relayAvailable = cfStatus.startsWith("OK") || turnUrl != null
