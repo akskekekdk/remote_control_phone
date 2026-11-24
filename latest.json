@@ -1,6 +1,6 @@
 {
-  "versionCode": 43,
-  "versionName": "2.32",
+  "versionCode": 44,
+  "versionName": "2.33",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "B폰 부하 완화(1280px/40fps)로 게임이 더 오래 버티게 균형 조정. LTE 끊김은 TCP 중계로 계속 안정. 기본 고속 5Mbps/40fps, 최고 초고속 9Mbps."
+  "notes": "시간 갈수록 느려지던 원인 수정: 재접속마다 쌓이던 연결 자원(PeerConnection/DataChannel) 누수 해결. A·B 양쪽에서 close만 하고 안 버리던 걸 완전 해제(dispose). 재접속 잦아도 B가 안 무거워집니다."
 }

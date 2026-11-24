@@ -141,9 +141,25 @@ class WebRtcHostService : Service() {
     @Volatile private var forceRelay = false
     @Volatile private var relayAvailable = false
 
+    /**
+     * 이전 연결 자원을 완전히 해제한다.
+     * close() 만 하면 네이티브(ICE 스레드·소켓·메모리)가 안 풀려서,
+     * 재접속할 때마다 B 프로세스에 쌓여 시간이 갈수록 B가 느려진다 → dispose() 까지 한다.
+     */
+    private fun disposePeerConnection() {
+        try { dataChannel?.unregisterObserver() } catch (_: Exception) {}
+        try { dataChannel?.close() } catch (_: Exception) {}
+        try { dataChannel?.dispose() } catch (_: Exception) {}
+        dataChannel = null
+        videoSender = null
+        try { pc?.close() } catch (_: Exception) {}
+        try { pc?.dispose() } catch (_: Exception) {}
+        pc = null
+    }
+
     /** 접속(재접속)마다 새 PeerConnection 을 만든다 → A가 나갔다 다시 와도 연결됨. */
     private fun createPeerConnection() {
-        try { pc?.close() } catch (_: Exception) {}
+        disposePeerConnection()
         offered = false
 
         val rtcConfig = PeerConnection.RTCConfiguration(iceServers).apply {
@@ -273,14 +289,14 @@ class WebRtcHostService : Service() {
         try { signaling?.close() } catch (_: Exception) {}
         try { capturer?.stopCapture() } catch (_: Exception) {}
         try { capturer?.dispose() } catch (_: Exception) {}
+        disposePeerConnection()   // DataChannel + PeerConnection 네이티브 자원까지 해제
         try { videoTrack?.dispose() } catch (_: Exception) {}
         try { videoSource?.dispose() } catch (_: Exception) {}
         try { helper?.dispose() } catch (_: Exception) {}
-        try { pc?.close() } catch (_: Exception) {}
         try { factory?.dispose() } catch (_: Exception) {}
         try { if (::eglBase.isInitialized) eglBase.release() } catch (_: Exception) {}
         signaling = null; capturer = null; videoTrack = null
-        videoSource = null; helper = null; pc = null; factory = null
+        videoSource = null; helper = null; factory = null
     }
 
     override fun onDestroy() { stopEverything(); super.onDestroy() }

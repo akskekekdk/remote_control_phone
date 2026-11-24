@@ -389,6 +389,12 @@ class WebRtcClientActivity : AppCompatActivity() {
 
     private fun continueConnect(url: String, code: String, ice: List<PeerConnection.IceServer>) {
         if (factory == null) return
+        // 새 PeerConnection 을 만들기 전 이전 것을 완전히 해제(안 하면 재접속마다 누적).
+        try { dataChannel?.dispose() } catch (_: Exception) {}
+        dataChannel = null
+        try { pc?.close() } catch (_: Exception) {}
+        try { pc?.dispose() } catch (_: Exception) {}
+        pc = null
         lastTransportBytes = 0L
         mainHandler.removeCallbacks(statsRunnable)
         mainHandler.postDelayed(statsRunnable, 5000)
@@ -563,7 +569,9 @@ class WebRtcClientActivity : AppCompatActivity() {
         signaling = null
         try { dataChannel?.dispose() } catch (_: Exception) {}
         dataChannel = null
+        // close() 만 하면 네이티브 자원이 안 풀려 재접속마다 쌓인다 → dispose() 까지.
         try { pc?.close() } catch (_: Exception) {}
+        try { pc?.dispose() } catch (_: Exception) {}
         pc = null
         offerSent = false
         connecting = false
