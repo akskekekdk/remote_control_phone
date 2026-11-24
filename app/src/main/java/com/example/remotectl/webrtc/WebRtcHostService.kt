@@ -115,6 +115,9 @@ class WebRtcHostService : Service() {
     private var iceServers: List<PeerConnection.IceServer> = emptyList()
 
     private fun initWebRtc(projectionData: Intent, servers: List<PeerConnection.IceServer>) {
+        // 이미 초기화돼 있는데 다시 시작되면(액티비티 재생성/재시작) 옛 자원을 먼저 해제.
+        // (안 하면 factory·eglBase·capturer 가 중복 생성돼 누수+이중 캡처로 B 가 무거워짐)
+        if (factory != null) stopEverything()
         iceServers = servers
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(applicationContext)

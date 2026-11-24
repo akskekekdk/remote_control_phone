@@ -1,6 +1,6 @@
 {
-  "versionCode": 45,
-  "versionName": "2.34",
+  "versionCode": 46,
+  "versionName": "2.35",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "[중요] 서명키 교체로 이 버전은 기존 앱 삭제 후 새로 설치해야 합니다(1회). 이후 업데이트는 정상. 내용: 재접속 누수 추가 보강(옛 신호 종료, 영상 sink 중복 제거, 진단 루프 중복 방지)."
+  "notes": "전체 코드 정밀 점검. B 화면공유 중복 시작 시 발생하던 누수(factory/eglBase/캡처 이중생성) 차단, remoteTrack 스레드 가시성, 업데이트 다운로드 중 액티비티 누수 방지. (v2.34와 같은 키라 앱 내 업데이트로 바로 됩니다)"
 }

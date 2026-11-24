@@ -68,7 +68,9 @@ object UpdateManager {
     /**
      * APK 다운로드 후 설치 화면 실행. DownloadManager 로 앱 전용 외부 저장소에 받는다.
      */
-    fun downloadAndInstall(context: Context, info: Info, onStatus: (String) -> Unit) {
+    fun downloadAndInstall(activityContext: Context, info: Info, onStatus: (String) -> Unit) {
+        // 다운로드가 끝날 때까지 수신기가 액티비티를 붙잡지 않도록 앱 컨텍스트 사용(액티비티 누수 방지)
+        val context = activityContext.applicationContext
         // "알 수 없는 앱 설치" 권한이 없으면 먼저 설정으로 유도
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             !context.packageManager.canRequestPackageInstalls()

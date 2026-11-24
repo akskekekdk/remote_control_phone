@@ -36,7 +36,7 @@ class WebRtcClientActivity : AppCompatActivity() {
     private var pc: PeerConnection? = null
     private var signaling: SignalingClient? = null
     private var dataChannel: DataChannel? = null
-    private var remoteTrack: VideoTrack? = null
+    @Volatile private var remoteTrack: VideoTrack? = null
     @Volatile private var offerSent = false
     private var pin = ""
     private val prefs by lazy { Prefs(this) }

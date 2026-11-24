@@ -36,8 +36,9 @@ function lockRemaining(map, key) {
 }
 function addFail(map, key) {
   if (!key) return;
-  const e = map.get(key) || { count: 0, lockedUntil: 0 };
+  const e = map.get(key) || { count: 0, lockedUntil: 0, ts: 0 };
   e.count += 1;
+  e.ts = Date.now();
   if (e.count >= FAIL_THRESHOLD) { e.lockedUntil = Date.now() + LOCK_MS; e.count = 0; }
   map.set(key, e);
 }
@@ -156,11 +157,21 @@ const heartbeat = setInterval(() => {
   });
 }, HEARTBEAT_MS);
 
-// 오래된 잠금 기록 정리 (메모리 누수 방지)
+// 오래된 기록 정리 (메모리 누수 방지):
+//  - 잠금이 풀린 항목
+//  - 잠기지 않았지만 10분 넘게 갱신 없는 저카운트 항목(영구 잔류 방지)
+const STALE_MS = 10 * 60 * 1000;
+function sweep(map, now) {
+  for (const [k, e] of map) {
+    const lockExpired = e.lockedUntil && e.lockedUntil < now && e.count === 0;
+    const staleIdle = !isLocked(map, k) && (now - (e.ts || 0)) > STALE_MS;
+    if (lockExpired || staleIdle) map.delete(k);
+  }
+}
 setInterval(() => {
   const now = Date.now();
-  for (const [k, e] of roomFails) if (e.lockedUntil && e.lockedUntil < now && e.count === 0) roomFails.delete(k);
-  for (const [k, e] of ipFails) if (e.lockedUntil && e.lockedUntil < now && e.count === 0) ipFails.delete(k);
+  sweep(roomFails, now);
+  sweep(ipFails, now);
 }, 60 * 1000);
 
 wss.on("close", () => clearInterval(heartbeat));
