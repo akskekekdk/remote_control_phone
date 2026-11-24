@@ -1,6 +1,6 @@
 {
-  "versionCode": 44,
-  "versionName": "2.33",
+  "versionCode": 45,
+  "versionName": "2.34",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "시간 갈수록 느려지던 원인 수정: 재접속마다 쌓이던 연결 자원(PeerConnection/DataChannel) 누수 해결. A·B 양쪽에서 close만 하고 안 버리던 걸 완전 해제(dispose). 재접속 잦아도 B가 안 무거워집니다."
+  "notes": "[중요] 서명키 교체로 이 버전은 기존 앱 삭제 후 새로 설치해야 합니다(1회). 이후 업데이트는 정상. 내용: 재접속 누수 추가 보강(옛 신호 종료, 영상 sink 중복 제거, 진단 루프 중복 방지)."
 }

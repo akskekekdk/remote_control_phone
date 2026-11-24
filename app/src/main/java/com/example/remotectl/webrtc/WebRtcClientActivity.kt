@@ -166,7 +166,8 @@ class WebRtcClientActivity : AppCompatActivity() {
         b.btnQuality.setOnLongClickListener {
             debugOn = !debugOn
             b.txtDebug.visibility = if (debugOn) View.VISIBLE else View.GONE
-            if (debugOn) mainHandler.post(debugRunnable) else mainHandler.removeCallbacks(debugRunnable)
+            mainHandler.removeCallbacks(debugRunnable)   // 중복 루프 방지
+            if (debugOn) mainHandler.post(debugRunnable)
             toast(if (debugOn) "진단 표시 켜짐" else "진단 표시 꺼짐")
             true
         }
@@ -389,7 +390,11 @@ class WebRtcClientActivity : AppCompatActivity() {
 
     private fun continueConnect(url: String, code: String, ice: List<PeerConnection.IceServer>) {
         if (factory == null) return
-        // 새 PeerConnection 을 만들기 전 이전 것을 완전히 해제(안 하면 재접속마다 누적).
+        // 새 연결을 만들기 전 이전 것을 완전히 해제(안 하면 재접속마다 누적).
+        try { signaling?.close() } catch (_: Exception) {}   // 옛 웹소켓+스케줄러 스레드 종료
+        signaling = null
+        try { remoteTrack?.removeSink(b.renderer) } catch (_: Exception) {}
+        remoteTrack = null
         try { dataChannel?.dispose() } catch (_: Exception) {}
         dataChannel = null
         try { pc?.close() } catch (_: Exception) {}
@@ -436,6 +441,7 @@ class WebRtcClientActivity : AppCompatActivity() {
             override fun onAddTrack(receiver: RtpReceiver?, streams: Array<out MediaStream>?) {
                 val track = receiver?.track()
                 if (track is VideoTrack) {
+                    try { remoteTrack?.removeSink(b.renderer) } catch (_: Exception) {}  // 옛 sink 중복 방지
                     remoteTrack = track
                     connecting = false
                     mainHandler.removeCallbacks(connectTimeout)

@@ -11,9 +11,8 @@ captures/
 .externalNativeBuild/
 .cxx/
 
-# 릴리스 서명 (깃에 올리지 않음 — 별도 보관)
-release.keystore
-keystore.properties
+# 릴리스 서명: 컨테이너 재생성 시 키 유실 방지를 위해 저장소에 포함(개인용).
+# (공개 저장소라 키가 노출되나, 2대 개인 사용이라 위험 낮음)
 .kotlin/
 
 # Node (신호 서버)
