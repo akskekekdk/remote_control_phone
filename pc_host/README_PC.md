@@ -4,7 +4,16 @@
 지금 쓰는 폰 앱을 그대로 쓰며, PC에 이 프로그램만 깔아 실행하면 됩니다.
 (신호 서버 · Cloudflare TURN · 방코드 · PIN 모두 폰 앱과 동일하게 사용)
 
-## 설치 (PC에서 한 번)
+## 방법 1 — 파이썬 없이 (추천, exe 하나)
+
+1. 아래 주소에서 **host_pc.exe** 를 받는다 (파이썬 설치 불필요):
+   https://github.com/akskekekdk/remote_control_phone/releases/download/pc-host/host_pc.exe
+2. 원하는 폴더에 두고 **더블클릭**. 처음 실행하면 옆에 `config.ini` 가 생긴다.
+3. `config.ini` 를 메모장으로 열어 **폰 앱과 똑같이** 채운다(room·pin·Cloudflare). 저장.
+4. `host_pc.exe` 다시 실행 → "방 참가" 뜨면 대기. 폰 앱에서 같은 코드/PIN 으로 '인터넷' 접속.
+   - Windows 보안 경고(파란 창)가 뜨면 "추가 정보 → 실행"을 누른다(서명 없는 개인 프로그램이라 그렇다).
+
+## 방법 2 — 파이썬으로 실행
 
 1. **Python 설치**: https://www.python.org/downloads/ 에서 Python 3.10 이상 설치.
    - 설치 첫 화면에서 **"Add python.exe to PATH"** 체크 필수.

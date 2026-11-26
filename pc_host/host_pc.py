@@ -17,7 +17,9 @@
 """
 
 import asyncio
+import concurrent.futures
 import configparser
+import fractions
 import json
 import os
 import sys
@@ -25,6 +27,17 @@ import threading
 import time
 
 import requests
+
+# 고해상도(DPI 배율) 모니터에서 캡처 픽셀과 커서 좌표를 일치시킨다(클릭 위치 정확).
+if sys.platform == "win32":
+    try:
+        import ctypes
+        try:
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)  # PER_MONITOR_AWARE
+        except Exception:
+            ctypes.windll.user32.SetProcessDPIAware()
+    except Exception:
+        pass
 
 try:
     import numpy as np
@@ -47,9 +60,41 @@ except Exception as e:  # noqa
 
 
 # ---------------- 설정 읽기 ----------------
-HERE = os.path.dirname(os.path.abspath(__file__))
+# PyInstaller 로 만든 exe(frozen)면 exe 가 있는 폴더, 아니면 이 스크립트 폴더에서 config.ini 를 찾는다.
+if getattr(sys, "frozen", False):
+    HERE = os.path.dirname(sys.executable)
+else:
+    HERE = os.path.dirname(os.path.abspath(__file__))
+CFG_PATH = os.path.join(HERE, "config.ini")
 CFG = configparser.ConfigParser()
-CFG.read(os.path.join(HERE, "config.ini"), encoding="utf-8")
+
+_CFG_TEMPLATE = """; 원격조종 PC 호스트 설정 — 폰 앱과 "똑같이" 채우세요.
+[signaling]
+url = wss://rc-k7m2x9q3.onrender.com/ws
+room =
+pin =
+
+[cloudflare]
+key_id =
+token =
+
+[video]
+max_dim = 1366
+fps = 20
+"""
+
+if not os.path.exists(CFG_PATH):
+    try:
+        with open(CFG_PATH, "w", encoding="utf-8") as f:
+            f.write(_CFG_TEMPLATE)
+        print(f"[설정] config.ini 를 새로 만들었습니다:\n  {CFG_PATH}")
+        print("이 파일을 메모장으로 열어 방코드(room)·PIN·Cloudflare 값을 폰 앱과 똑같이 채운 뒤 다시 실행하세요.")
+        input("엔터를 누르면 종료합니다...")
+        sys.exit(0)
+    except Exception as e:  # noqa
+        print("config.ini 생성 실패:", e)
+
+CFG.read(CFG_PATH, encoding="utf-8")
 
 SIGNAL_URL = CFG.get("signaling", "url", fallback="wss://example.com/ws").strip()
 ROOM = CFG.get("signaling", "room", fallback="").strip()
@@ -68,12 +113,21 @@ if not ROOM or not PIN:
 def build_ice_servers():
     servers = [RTCIceServer(urls=["stun:stun.l.google.com:19302"])]
     if CF_KEY and CF_TOKEN:
-        try:
-            url = f"https://rtc.live.cloudflare.com/v1/turn/keys/{CF_KEY}/credentials/generate-ice-servers"
-            r = requests.post(url, headers={"Authorization": f"Bearer {CF_TOKEN}"},
-                              json={"ttl": 86400}, timeout=12)
-            if r.ok:
-                data = r.json()
+        data = None
+        for path in ("generate-ice-servers", "generate"):
+            try:
+                url = f"https://rtc.live.cloudflare.com/v1/turn/keys/{CF_KEY}/credentials/{path}"
+                r = requests.post(url, headers={"Authorization": f"Bearer {CF_TOKEN}"},
+                                  json={"ttl": 86400}, timeout=12)
+                if r.ok:
+                    data = r.json()
+                    break
+                else:
+                    print(f"[ICE] Cloudflare {path} HTTP {r.status_code}")
+            except Exception as e:  # noqa
+                print(f"[ICE] Cloudflare {path} 오류: {e}")
+        if data is not None:
+            try:
                 for ice in data.get("iceServers", []):
                     urls = ice.get("urls")
                     urls = urls if isinstance(urls, list) else [urls]
@@ -88,10 +142,10 @@ def build_ice_servers():
                             credential=ice.get("credential", ""),
                         ))
                 print(f"[ICE] Cloudflare TURN OK ({len(data.get('iceServers', []))})")
-            else:
-                print(f"[ICE] Cloudflare 실패 HTTP {r.status_code} — STUN 만 사용")
-        except Exception as e:  # noqa
-            print(f"[ICE] Cloudflare 오류: {e} — STUN 만 사용")
+            except Exception as e:  # noqa
+                print(f"[ICE] Cloudflare 응답 파싱 오류: {e} — STUN 만 사용")
+        else:
+            print("[ICE] Cloudflare 발급 실패 — STUN 만 사용")
     else:
         print("[ICE] Cloudflare 키 없음 — STUN 만 사용(같은 망/포트개방에서만 연결될 수 있음)")
     return servers
@@ -106,7 +160,7 @@ class ScreenTrack(VideoStreamTrack):
         self._start = time.monotonic()
         self._next = time.monotonic()
         self._tl = threading.local()
-        self._exec = __import__("concurrent.futures").futures.ThreadPoolExecutor(max_workers=1)
+        self._exec = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         # 주 모니터 좌표(입력 매핑에 사용)
         with mss.mss() as s:
             self.mon = dict(s.monitors[1])
@@ -144,7 +198,7 @@ class ScreenTrack(VideoStreamTrack):
         img = await loop.run_in_executor(self._exec, self._grab)
         frame = VideoFrame.from_ndarray(img, format="rgb24")
         frame.pts = int((time.monotonic() - self._start) * 90000)
-        frame.time_base = __import__("fractions").Fraction(1, 90000)
+        frame.time_base = fractions.Fraction(1, 90000)
         return frame
 
 
@@ -232,7 +286,7 @@ class Session:
         self.track = None
         self.channel = None
         self.pending_candidates = []
-        self.input_exec = __import__("concurrent.futures").futures.ThreadPoolExecutor(max_workers=1)
+        self.input_exec = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
     async def close_pc(self):
         if self.channel:
