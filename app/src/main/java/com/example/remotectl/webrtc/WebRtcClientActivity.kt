@@ -180,6 +180,7 @@ class WebRtcClientActivity : AppCompatActivity() {
         }
 
         setupTouch()
+        setupKeyboard()
 
         // 탭하면 입력창 보기(바로연결 화면에서 설정으로)
         b.txtConnecting.setOnClickListener { showForm() }
@@ -544,6 +545,55 @@ class WebRtcClientActivity : AppCompatActivity() {
                 }
             }
             true
+        }
+    }
+
+    // ---- 키보드(PC 호스트용 글자 입력) ----
+    // 숨은 EditText 에 입력된 글자를 데이터채널로 보낸다. 항상 보이지 않는 placeholder 한 글자를
+    // 유지해, 빈 칸에서 백스페이스를 눌러도(=placeholder 삭제) 백스페이스로 감지한다.
+    private val kbdPlaceholder = "​"   // zero-width space
+    private var kbdGuard = false
+
+    private fun resetKbd() {
+        kbdGuard = true
+        b.editKbd.setText(kbdPlaceholder)
+        b.editKbd.setSelection(kbdPlaceholder.length)
+        kbdGuard = false
+    }
+
+    private fun setupKeyboard() {
+        resetKbd()
+        b.editKbd.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
+            override fun onTextChanged(s: CharSequence?, st: Int, b4: Int, c: Int) {}
+            override fun afterTextChanged(s: android.text.Editable) {
+                if (kbdGuard) return
+                val cur = s.toString()
+                when {
+                    cur.length > kbdPlaceholder.length -> {
+                        val typed = cur.substring(kbdPlaceholder.length)
+                        if (typed.isNotEmpty()) sendInput(InputCodec.text(typed))
+                        resetKbd()
+                    }
+                    cur.isEmpty() -> {               // placeholder 까지 지워짐 = 백스페이스
+                        sendInput(InputCodec.vkey("back"))
+                        resetKbd()
+                    }
+                }
+            }
+        })
+        // 전송/엔터 키 → PC 에 Enter
+        b.editKbd.setOnEditorActionListener { _, _, _ ->
+            sendInput(InputCodec.vkey("enter")); true
+        }
+        b.btnKeyboard.setOnClickListener {
+            if (remoteTrack == null) { toast("먼저 연결한 뒤 사용하세요"); return@setOnClickListener }
+            resetKbd()
+            b.editKbd.requestFocus()
+            val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
+                as android.view.inputmethod.InputMethodManager
+            imm.showSoftInput(b.editKbd, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+            toast("자판: 글자를 입력하면 PC에 전달됩니다")
         }
     }
 

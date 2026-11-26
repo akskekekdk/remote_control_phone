@@ -46,6 +46,11 @@
                 <TextView android:id="@+id/txtQualityLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="표준" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
             </LinearLayout>
 
+            <LinearLayout android:id="@+id/btnKeyboard" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⌨" android:textColor="#C7CBD1" android:textSize="22sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="자판" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="1dp" />
+            </LinearLayout>
+
             <LinearLayout android:id="@+id/btnBack" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="@drawable/navbtn_bg" android:layout_marginVertical="4dp" android:clickable="true" android:focusable="true">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_back" android:contentDescription="뒤로" />
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="뒤로" android:textColor="#C7CBD1" android:textSize="10sp" android:layout_marginTop="3dp" />
@@ -65,6 +70,19 @@
                 android:layout_gravity="center" />
         </FrameLayout>
     </LinearLayout>
+
+    <!-- 숨은 입력창: 자판 버튼을 누르면 포커스를 받아 소프트키보드를 띄우고,
+         입력된 글자를 데이터채널로 PC(호스트)에 전달한다. 화면에는 거의 안 보이게. -->
+    <EditText
+        android:id="@+id/editKbd"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:layout_gravity="bottom|start"
+        android:alpha="0"
+        android:inputType="text"
+        android:imeOptions="actionSend|flagNoExtractUi"
+        android:background="@null"
+        android:importantForAutofill="no" />
 
     <!-- 재연결 버튼 (오른쪽 위, 왼쪽 바와 다른 위치) -->
     <TextView

@@ -17,3 +17,7 @@ captures/
 
 # Node (신호 서버)
 server/node_modules/
+
+# PC 호스트(파이썬) 로컬 산출물
+pc_host/.venv/
+pc_host/__pycache__/

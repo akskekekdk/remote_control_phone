@@ -1,6 +1,6 @@
 {
-  "versionCode": 46,
-  "versionName": "2.35",
+  "versionCode": 47,
+  "versionName": "2.36",
   "apkUrl": "https://github.com/akskekekdk/remote_control_phone/raw/main/dist/app-release.apk",
-  "notes": "전체 코드 정밀 점검. B 화면공유 중복 시작 시 발생하던 누수(factory/eglBase/캡처 이중생성) 차단, remoteTrack 스레드 가시성, 업데이트 다운로드 중 액티비티 누수 방지. (v2.34와 같은 키라 앱 내 업데이트로 바로 됩니다)"
+  "notes": "키보드(자판) 추가 — 왼쪽 바의 ⌨ 버튼으로 PC에 글자 입력/Enter/백스페이스 전송. Windows 미니PC 호스트 프로그램(pc_host) 추가."
 }

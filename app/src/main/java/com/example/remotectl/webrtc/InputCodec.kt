@@ -22,6 +22,12 @@ object InputCodec {
 
     fun key(k: Int) = JSONObject().put("t", "key").put("k", k).toString()
 
+    /** PC 호스트용: 글자 입력(여러 글자 가능). */
+    fun text(s: String) = JSONObject().put("t", "text").put("s", s).toString()
+
+    /** PC 호스트용: 특수키(enter/back/tab/esc/space/up/down/left/right 등). */
+    fun vkey(k: String) = JSONObject().put("t", "vkey").put("k", k).toString()
+
     /** 화질(영상 전송량) 변경 요청. bitrate = 초당 비트, fps = 프레임레이트 */
     fun quality(bitrate: Int, fps: Int) =
         JSONObject().put("t", "quality").put("bitrate", bitrate).put("fps", fps).toString()
